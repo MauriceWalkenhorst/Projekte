@@ -844,6 +844,137 @@
       gap: 1rem;
     }
 
+    /* Benchmark Comparison */
+    .benchmark-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .bench-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .bench-toggle:hover {
+      border-color: var(--border-hover);
+      color: var(--text-secondary);
+    }
+
+    .bench-toggle.active {
+      color: var(--text-primary);
+    }
+
+    .bench-toggle .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .compare-period-btn {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      font-family: inherit;
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .compare-period-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+    }
+
+    .compare-period-btn.active {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .compare-table th {
+      padding: 0.65rem 1rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .compare-table th:first-child {
+      text-align: left;
+    }
+
+    .compare-table td {
+      padding: 0.65rem 1rem;
+      font-size: 0.8125rem;
+      font-family: 'JetBrains Mono', monospace;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .compare-table td:first-child {
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+    }
+
+    .compare-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .compare-table tr:hover td {
+      background: var(--bg-card-hover);
+    }
+
+    .compare-table .highlight-row td {
+      background: rgba(99, 102, 241, 0.06);
+      font-weight: 600;
+    }
+
+    .compare-table .highlight-row td:first-child {
+      font-weight: 700;
+    }
+
+    .bench-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .bench-label .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
@@ -993,6 +1124,7 @@
         <button class="tab-btn active" data-tab="overview">Uebersicht</button>
         <button class="tab-btn" data-tab="holdings">Positionen</button>
         <button class="tab-btn" data-tab="performance">Performance</button>
+        <button class="tab-btn" data-tab="compare">Vergleich</button>
         <button class="tab-btn" data-tab="news">Nachrichten</button>
       </div>
 
@@ -1087,6 +1219,61 @@
           </div>
           <div class="chart-container">
             <canvas id="sectorPerfChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Vergleich -->
+      <div class="tab-content" id="tab-compare">
+        <!-- Benchmark Selector -->
+        <div class="panel" style="margin-bottom: 1rem;">
+          <div class="panel-header">
+            <span class="panel-title">Portfolio vs. Welt-Indizes</span>
+            <div class="panel-actions">
+              <button class="compare-period-btn" data-cperiod="1M">1M</button>
+              <button class="compare-period-btn" data-cperiod="3M">3M</button>
+              <button class="compare-period-btn active" data-cperiod="6M">6M</button>
+              <button class="compare-period-btn" data-cperiod="1J">1J</button>
+              <button class="compare-period-btn" data-cperiod="3J">3J</button>
+              <button class="compare-period-btn" data-cperiod="MAX">MAX</button>
+            </div>
+          </div>
+          <div class="benchmark-toggles" id="benchmarkToggles"></div>
+          <div class="chart-container" style="height: 380px;">
+            <canvas id="compareChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Stats Comparison -->
+        <div class="panel" style="margin-bottom: 1rem;">
+          <div class="panel-header">
+            <span class="panel-title">Kennzahlen im Vergleich</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="compare-table" id="compareTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Rolling Returns -->
+        <div class="chart-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Outperformance vs. MSCI World</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="alphaChart"></canvas>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Drawdown-Vergleich</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="drawdownChart"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -1361,7 +1548,7 @@
     // CHARTS
     // ==========================================
 
-    let perfChart, allocChart, cumChart, monthChart, sectorPerfChartInstance;
+    let perfChart, allocChart, cumChart, monthChart, sectorPerfChartInstance, compareChartInstance, alphaChartInstance, drawdownChartInstance;
 
     function renderCharts() {
       renderPerformanceChart();
@@ -1830,6 +2017,446 @@
     }
 
     // ==========================================
+    // BENCHMARK COMPARISON TAB
+    // ==========================================
+
+    const BENCHMARKS = [
+      { id: 'portfolio', name: 'Mein Portfolio', color: '#6366f1', active: true, annualReturn: null },
+      { id: 'msci_world', name: 'MSCI World', color: '#22c55e', active: true, annualReturn: 0.095 },
+      { id: 'sp500', name: 'S&P 500', color: '#3b82f6', active: true, annualReturn: 0.105 },
+      { id: 'eurostoxx50', name: 'EURO STOXX 50', color: '#f97316', active: false, annualReturn: 0.07 },
+      { id: 'dax', name: 'DAX', color: '#eab308', active: false, annualReturn: 0.08 },
+      { id: 'nasdaq100', name: 'NASDAQ 100', color: '#ec4899', active: false, annualReturn: 0.14 },
+      { id: 'msci_em', name: 'MSCI Emerging Markets', color: '#06b6d4', active: false, annualReturn: 0.05 },
+    ];
+
+    let compareperiod = '6M';
+
+    function getCompareDays() {
+      switch (compareperiod) {
+        case '1M': return 30;
+        case '3M': return 90;
+        case '6M': return 180;
+        case '1J': return 365;
+        case '3J': return 1095;
+        case 'MAX': return 1825;
+        default: return 180;
+      }
+    }
+
+    function generateBenchmarkData(annualReturn, days, volatility = 0.012) {
+      const dailyReturn = annualReturn / 252;
+      const data = [0];
+      for (let i = 1; i <= days; i++) {
+        const noise = (Math.random() - 0.5) * volatility * 2;
+        const prev = data[i - 1];
+        data.push(prev + dailyReturn * 100 + noise * 100);
+      }
+      return data;
+    }
+
+    function generatePortfolioReturns(days) {
+      const stats = calcPortfolio();
+      const totalReturnPct = stats.totalGainPct;
+      const dailyAvg = totalReturnPct / 365;
+      const data = [0];
+      for (let i = 1; i <= days; i++) {
+        const noise = (Math.random() - 0.5) * 0.015 * 2;
+        data.push(data[i - 1] + dailyAvg + noise * 100);
+      }
+      // Ensure last point matches actual portfolio return (scaled to period)
+      const scale = days / 365;
+      const target = totalReturnPct * scale;
+      const current = data[data.length - 1];
+      const adjust = target - current;
+      for (let i = 1; i < data.length; i++) {
+        data[i] += adjust * (i / days);
+      }
+      return data;
+    }
+
+    function renderBenchmarkToggles() {
+      const container = document.getElementById('benchmarkToggles');
+      container.innerHTML = BENCHMARKS.map(b => `
+        <button class="bench-toggle ${b.active ? 'active' : ''}" data-bench="${b.id}"
+                style="${b.active ? `border-color: ${b.color}40; background: ${b.color}10;` : ''}">
+          <span class="dot" style="background: ${b.color};"></span>
+          ${b.name}
+        </button>
+      `).join('');
+
+      container.querySelectorAll('.bench-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const bench = BENCHMARKS.find(b => b.id === btn.dataset.bench);
+          if (bench.id === 'portfolio') return; // portfolio always on
+          bench.active = !bench.active;
+          renderBenchmarkToggles();
+          renderCompareChart();
+          renderCompareTable();
+        });
+      });
+    }
+
+    function renderCompareChart() {
+      const ctx = document.getElementById('compareChart').getContext('2d');
+      if (compareChartInstance) compareChartInstance.destroy();
+
+      const days = getCompareDays();
+      const activeBenchmarks = BENCHMARKS.filter(b => b.active);
+
+      const labels = [];
+      const now = new Date();
+      for (let i = days; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        labels.push(d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
+      }
+
+      const datasets = activeBenchmarks.map(b => {
+        const data = b.id === 'portfolio'
+          ? generatePortfolioReturns(days)
+          : generateBenchmarkData(b.annualReturn, days);
+        // store for stats
+        b._data = data;
+        return {
+          label: b.name,
+          data,
+          borderColor: b.color,
+          borderWidth: b.id === 'portfolio' ? 2.5 : 1.5,
+          borderDash: b.id === 'portfolio' ? [] : [0],
+          backgroundColor: 'transparent',
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: b.color,
+        };
+      });
+
+      compareChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              padding: 12,
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw >= 0 ? '+' : ''}${ctx.raw.toFixed(2)}%`,
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: { color: '#71717a', font: { size: 10 }, maxTicksLimit: 10 },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                callback: (v) => (v >= 0 ? '+' : '') + v.toFixed(0) + '%',
+              },
+              border: { display: false }
+            }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      });
+    }
+
+    function renderCompareTable() {
+      const table = document.getElementById('compareTable');
+      const activeBenchmarks = BENCHMARKS.filter(b => b.active);
+      const days = getCompareDays();
+
+      // Calculate stats for each benchmark
+      const stats = activeBenchmarks.map(b => {
+        const data = b._data || [];
+        const totalReturn = data.length > 0 ? data[data.length - 1] : 0;
+        const annualized = data.length > 252 ? totalReturn / (days / 365) : totalReturn * (365 / days);
+
+        // Volatility (std dev of daily returns)
+        const dailyReturns = [];
+        for (let i = 1; i < data.length; i++) {
+          dailyReturns.push(data[i] - data[i - 1]);
+        }
+        const mean = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+        const variance = dailyReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / dailyReturns.length;
+        const dailyVol = Math.sqrt(variance);
+        const annualVol = dailyVol * Math.sqrt(252);
+
+        // Max Drawdown
+        let peak = -Infinity;
+        let maxDD = 0;
+        data.forEach(v => {
+          if (v > peak) peak = v;
+          const dd = peak - v;
+          if (dd > maxDD) maxDD = dd;
+        });
+
+        // Sharpe (simplified, risk-free = 4%)
+        const riskFreeRate = 4;
+        const sharpe = annualVol > 0 ? (annualized - riskFreeRate) / annualVol : 0;
+
+        return {
+          id: b.id,
+          name: b.name,
+          color: b.color,
+          totalReturn,
+          annualized,
+          volatility: annualVol,
+          maxDrawdown: maxDD,
+          sharpe,
+        };
+      });
+
+      // Build table
+      const headerHtml = `
+        <tr>
+          <th style="text-align: left;">Kennzahl</th>
+          ${stats.map(s => `<th><div class="bench-label" style="justify-content: flex-end;"><span class="dot" style="background: ${s.color};"></span> ${s.name}</div></th>`).join('')}
+        </tr>
+      `;
+
+      const rows = [
+        { label: 'Gesamtrendite', key: 'totalReturn', fmt: (v) => `<span class="${v >= 0 ? 'positive' : 'negative'}">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>` },
+        { label: 'Annualisiert', key: 'annualized', fmt: (v) => `<span class="${v >= 0 ? 'positive' : 'negative'}">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>` },
+        { label: 'Volatilitaet (p.a.)', key: 'volatility', fmt: (v) => `${v.toFixed(2)}%` },
+        { label: 'Max. Drawdown', key: 'maxDrawdown', fmt: (v) => `<span class="negative">-${v.toFixed(2)}%</span>` },
+        { label: 'Sharpe Ratio', key: 'sharpe', fmt: (v) => v.toFixed(2) },
+      ];
+
+      const bodyHtml = rows.map((row, ri) => {
+        // Find best value for highlighting
+        let bestIdx = 0;
+        if (row.key === 'totalReturn' || row.key === 'annualized' || row.key === 'sharpe') {
+          stats.forEach((s, i) => { if (s[row.key] > stats[bestIdx][row.key]) bestIdx = i; });
+        } else if (row.key === 'volatility' || row.key === 'maxDrawdown') {
+          stats.forEach((s, i) => { if (s[row.key] < stats[bestIdx][row.key]) bestIdx = i; });
+        }
+
+        return `
+          <tr>
+            <td>${row.label}</td>
+            ${stats.map((s, i) => `<td style="${i === bestIdx ? 'color: var(--green); font-weight: 600;' : ''}">${row.fmt(s[row.key])}</td>`).join('')}
+          </tr>
+        `;
+      }).join('');
+
+      // Alpha row (portfolio vs MSCI World)
+      const portfolioStats = stats.find(s => s.id === 'portfolio');
+      const msciStats = stats.find(s => s.id === 'msci_world');
+      let alphaHtml = '';
+      if (portfolioStats && msciStats) {
+        const alpha = portfolioStats.totalReturn - msciStats.totalReturn;
+        alphaHtml = `
+          <tr class="highlight-row">
+            <td>Alpha vs. MSCI World</td>
+            ${stats.map(s => {
+              if (s.id === 'portfolio') {
+                return `<td><span class="${alpha >= 0 ? 'positive' : 'negative'}">${alpha >= 0 ? '+' : ''}${alpha.toFixed(2)}%</span></td>`;
+              }
+              return '<td>-</td>';
+            }).join('')}
+          </tr>
+        `;
+      }
+
+      table.querySelector('thead').innerHTML = headerHtml;
+      table.querySelector('tbody').innerHTML = bodyHtml + alphaHtml;
+    }
+
+    function renderAlphaChart() {
+      const ctx = document.getElementById('alphaChart').getContext('2d');
+      if (alphaChartInstance) alphaChartInstance.destroy();
+
+      const days = getCompareDays();
+      const portfolioData = generatePortfolioReturns(days);
+      const msciData = generateBenchmarkData(0.095, days);
+
+      const labels = [];
+      const alphaData = [];
+      const now = new Date();
+
+      for (let i = 0; i <= days; i++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - (days - i));
+        labels.push(d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
+        alphaData.push(portfolioData[i] - msciData[i]);
+      }
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+      gradient.addColorStop(0, 'rgba(99, 102, 241, 0.25)');
+      gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.0)');
+      gradient.addColorStop(1, 'rgba(239, 68, 68, 0.15)');
+
+      alphaChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Alpha',
+            data: alphaData,
+            borderColor: alphaData[alphaData.length - 1] >= 0 ? '#6366f1' : '#ef4444',
+            borderWidth: 2,
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              callbacks: {
+                label: (ctx) => `Alpha: ${ctx.raw >= 0 ? '+' : ''}${ctx.raw.toFixed(2)}%`,
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: { color: '#71717a', font: { size: 10 }, maxTicksLimit: 8 },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                callback: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%',
+              },
+              border: { display: false }
+            }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      });
+    }
+
+    function renderDrawdownChart() {
+      const ctx = document.getElementById('drawdownChart').getContext('2d');
+      if (drawdownChartInstance) drawdownChartInstance.destroy();
+
+      const days = getCompareDays();
+      const labels = [];
+      const now = new Date();
+
+      for (let i = days; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        labels.push(d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
+      }
+
+      const calcDrawdown = (data) => {
+        const dd = [];
+        let peak = -Infinity;
+        data.forEach(v => {
+          if (v > peak) peak = v;
+          dd.push(v - peak);
+        });
+        return dd;
+      };
+
+      const pData = generatePortfolioReturns(days);
+      const mData = generateBenchmarkData(0.095, days);
+      const sData = generateBenchmarkData(0.105, days);
+
+      const datasets = [
+        { label: 'Mein Portfolio', data: calcDrawdown(pData), borderColor: '#6366f1', borderWidth: 2, backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.3, pointRadius: 0 },
+        { label: 'MSCI World', data: calcDrawdown(mData), borderColor: '#22c55e', borderWidth: 1.5, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0 },
+        { label: 'S&P 500', data: calcDrawdown(sData), borderColor: '#3b82f6', borderWidth: 1.5, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0 },
+      ];
+
+      drawdownChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#a1a1aa',
+                font: { size: 10 },
+                boxWidth: 12,
+                boxHeight: 2,
+                padding: 12,
+              }
+            },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%`,
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: { color: '#71717a', font: { size: 10 }, maxTicksLimit: 8 },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                callback: (v) => v.toFixed(1) + '%',
+              },
+              border: { display: false }
+            }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      });
+    }
+
+    function renderCompareTab() {
+      renderBenchmarkToggles();
+      renderCompareChart();
+      renderCompareTable();
+      renderAlphaChart();
+      renderDrawdownChart();
+    }
+
+    // Compare period buttons
+    document.querySelectorAll('.compare-period-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.compare-period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        compareperiod = btn.dataset.cperiod;
+        renderCompareTab();
+      });
+    });
+
+    // ==========================================
     // TABS
     // ==========================================
 
@@ -1846,6 +2473,9 @@
         }
         if (btn.dataset.tab === 'performance') {
           renderPerformanceTab();
+        }
+        if (btn.dataset.tab === 'compare') {
+          renderCompareTab();
         }
       });
     });

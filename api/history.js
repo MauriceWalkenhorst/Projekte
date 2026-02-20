@@ -1,4 +1,4 @@
-const AV_KEY = process.env.ALPHAVANTAGE_KEY || '7MJJW612K9HUS2XG';
+const AV_KEY = process.env.ALPHAVANTAGE_KEY;
 const AV_BASE = 'https://www.alphavantage.co/query';
 
 async function avFetch(params) {

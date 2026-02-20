@@ -1,0 +1,13 @@
+{
+  "name": "portfolio-dashboard",
+  "version": "1.0.0",
+  "description": "Portfolio Dashboard - Echtzeit-Aktienkurse, Charts und Finanz-News",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  }
+}

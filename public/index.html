@@ -1150,9 +1150,9 @@
           <div class="kpi-sub" id="kpiDayChangePct">--</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Dividenden YTD</div>
+          <div class="kpi-label">Positionen</div>
           <div class="kpi-value" id="kpiDividends">--</div>
-          <div class="kpi-sub">Erhalten in 2026</div>
+          <div class="kpi-sub">im Portfolio</div>
         </div>
       </div>
 
@@ -1360,91 +1360,74 @@
 
     const sectorColors = {};
 
-    // Demo data - will be replaced by CSV import
+    // Dein Portfolio (Stand: 20.02.2026)
     let portfolioData = [
-      { name: 'Apple Inc.', ticker: 'AAPL', shares: 50, buyPrice: 142.50, currentPrice: 198.30, sector: 'Technologie', dayChange: 1.8 },
-      { name: 'Microsoft Corp.', ticker: 'MSFT', shares: 30, buyPrice: 285.00, currentPrice: 428.50, sector: 'Technologie', dayChange: -0.5 },
-      { name: 'NVIDIA Corp.', ticker: 'NVDA', shares: 25, buyPrice: 450.00, currentPrice: 875.20, sector: 'Technologie', dayChange: 3.2 },
-      { name: 'Amazon.com', ticker: 'AMZN', shares: 20, buyPrice: 128.00, currentPrice: 208.90, sector: 'Zyklisch', dayChange: 0.9 },
-      { name: 'Alphabet Inc.', ticker: 'GOOGL', shares: 35, buyPrice: 105.00, currentPrice: 178.60, sector: 'Kommunikation', dayChange: -0.3 },
-      { name: 'Tesla Inc.', ticker: 'TSLA', shares: 40, buyPrice: 195.00, currentPrice: 352.40, sector: 'Zyklisch', dayChange: 4.5 },
-      { name: 'JPMorgan Chase', ticker: 'JPM', shares: 25, buyPrice: 140.00, currentPrice: 242.80, sector: 'Finanzen', dayChange: 0.7 },
-      { name: 'Johnson & Johnson', ticker: 'JNJ', shares: 30, buyPrice: 160.00, currentPrice: 158.20, sector: 'Gesundheit', dayChange: -0.2 },
-      { name: 'Visa Inc.', ticker: 'V', shares: 15, buyPrice: 230.00, currentPrice: 315.70, sector: 'Finanzen', dayChange: 1.1 },
-      { name: 'Procter & Gamble', ticker: 'PG', shares: 20, buyPrice: 148.00, currentPrice: 172.50, sector: 'Basiskonsumgueter', dayChange: 0.3 },
-      { name: 'UnitedHealth Group', ticker: 'UNH', shares: 8, buyPrice: 490.00, currentPrice: 562.30, sector: 'Gesundheit', dayChange: -1.1 },
-      { name: 'Mastercard Inc.', ticker: 'MA', shares: 10, buyPrice: 370.00, currentPrice: 528.40, sector: 'Finanzen', dayChange: 0.8 },
-      { name: 'Home Depot', ticker: 'HD', shares: 12, buyPrice: 310.00, currentPrice: 398.60, sector: 'Zyklisch', dayChange: -0.6 },
-      { name: 'Coca-Cola Co.', ticker: 'KO', shares: 60, buyPrice: 58.00, currentPrice: 62.80, sector: 'Basiskonsumgueter', dayChange: 0.1 },
-      { name: 'Broadcom Inc.', ticker: 'AVGO', shares: 10, buyPrice: 680.00, currentPrice: 1245.80, sector: 'Technologie', dayChange: 2.4 },
+      { name: 'Amundi Core MSCI World UCITS ETF', ticker: 'URTH',    isin: 'IE000BI8OT95', wkn: 'ETF146', shares: 10.35, buyPrice: 139.09, currentPrice: 142.66, sector: 'ETF Welt',             dayChange: 0 },
+      { name: 'iShares MSCI EM UCITS ETF (Acc)',  ticker: 'EEM',     isin: 'IE00B4L5YC18', wkn: 'A0RPWJ', shares: 14.51, buyPrice:  48.86, currentPrice:  49.66, sector: 'ETF Schwellenlaender', dayChange: 0 },
+      { name: 'iShares Core S&P 500 UCITS ETF',   ticker: 'SPY',     isin: 'IE00B5BMR087', wkn: 'A0YEDG', shares:  1.13, buyPrice: 620.36, currentPrice: 627.07, sector: 'ETF USA',              dayChange: 0 },
+      { name: 'Bitcoin',                           ticker: 'BTC',     isin: '',             wkn: '',        shares:  0.01, buyPrice: 58627.22,currentPrice: 58014.00,sector: 'Krypto',            dayChange: -1.05 },
+      { name: 'Rheinmetall AG',                    ticker: 'RHM.DEX', isin: 'DE0007030009', wkn: '703000', shares:  0.25, buyPrice: 1626.00, currentPrice: 1752.00, sector: 'Ruestung',           dayChange: 0 },
+      { name: 'Xtrackers Euro Stoxx 50 UCITS ETF', ticker: 'FEZ',    isin: 'LU0380865021', wkn: 'DBX1ET', shares:  3.80, buyPrice: 105.24, currentPrice: 106.48, sector: 'ETF Europa',           dayChange: 0 },
     ];
 
     let pendingCsvData = null;
 
-    // Demo news
+    // Demo-News passend zum Portfolio (wird durch Alpha Vantage ersetzt wenn live)
     const newsData = [
       {
-        source: 'Bloomberg',
-        time: 'vor 25 Min.',
-        title: 'NVIDIA uebertrifft Erwartungen: KI-Nachfrage treibt Umsatz auf Rekordniveau',
-        excerpt: 'Der Chipkonzern meldete einen Quartalsumsatz von $35 Mrd., angetrieben durch die massive Nachfrage nach KI-Beschleunigern im Rechenzentrumsgeschaeft.',
-        tickers: ['NVDA', 'AMD', 'INTC'],
+        source: 'Handelsblatt',
+        time: 'vor 30 Min.',
+        title: 'Rheinmetall auf Allzeithoch: Ruestungsausgaben in Europa steigen weiter',
+        excerpt: 'Der Duesseldorfer Ruestungskonzern profitiert vom anhaltenden Aufbau der europaeischen Verteidigungsbudgets. Analysten erhoehen die Kursziele auf bis zu 2.100 Euro.',
+        tickers: ['RHM.DEX'],
         tag: 'bullish'
+      },
+      {
+        source: 'Bloomberg',
+        time: 'vor 1 Std.',
+        title: 'Bitcoin unter Druck: Kryptomarkt reagiert auf Fed-Aussagen',
+        excerpt: 'Nach dem zurueckhaltenden Ton der US-Notenbank geraten Kryptowaehrungen unter Verkaufsdruck. Bitcoin faellt unter die 58.000-Dollar-Marke.',
+        tickers: ['BTC'],
+        tag: 'bearish'
       },
       {
         source: 'Reuters',
-        time: 'vor 1 Std.',
-        title: 'Fed signalisiert Zurueckhaltung bei weiteren Zinssenkungen',
-        excerpt: 'Die US-Notenbank deutete an, die Zinssaetze auf dem aktuellen Niveau zu belassen und verwies auf weiterhin robuste Arbeitsmarktdaten.',
-        tickers: ['JPM', 'V', 'MA'],
-        tag: 'bearish'
-      },
-      {
-        source: 'Handelsblatt',
         time: 'vor 2 Std.',
-        title: 'Apple plant neues KI-Oekosystem fuer iPhone und Mac',
-        excerpt: 'Mit der naechsten Generation von Apple Intelligence soll der Konzern seine KI-Strategie massiv ausbauen und die Integration in alle Geraete vertiefen.',
-        tickers: ['AAPL', 'MSFT', 'GOOGL'],
-        tag: 'bullish'
-      },
-      {
-        source: 'CNBC',
-        time: 'vor 3 Std.',
-        title: 'Tesla stellt autonomes Ride-Hailing-Netzwerk in Austin vor',
-        excerpt: 'Elon Musk praesentierte den Start eines Robotaxi-Dienstes in der texanischen Hauptstadt. Analysten sehen das als wichtigen Meilenstein.',
-        tickers: ['TSLA'],
-        tag: 'bullish'
-      },
-      {
-        source: 'Financial Times',
-        time: 'vor 4 Std.',
-        title: 'Johnson & Johnson unter Druck: Patent-Klippe sorgt fuer Unsicherheit',
-        excerpt: 'Mehrere Blockbuster-Medikamente verlieren in den naechsten Jahren ihren Patentschutz. Analysten senken ihre Kursziele.',
-        tickers: ['JNJ', 'UNH'],
-        tag: 'bearish'
-      },
-      {
-        source: 'Manager Magazin',
-        time: 'vor 5 Std.',
-        title: 'Broadcom profitiert von KI-Infrastruktur: Analysten erhoehen Kursziele',
-        excerpt: 'Der Halbleiter-Konzern profitiert zunehmend von der Nachfrage nach kundenspezifischen KI-Chips und Netzwerkloesungen.',
-        tickers: ['AVGO', 'NVDA'],
+        title: 'MSCI World ETFs mit starken Zuflüssen im Januar 2026',
+        excerpt: 'Europaeische Anleger setzen weiterhin auf breite Marktabdeckung. Amundi und iShares verzeichnen Rekordzuflüsse in ihre World-ETF-Produkte.',
+        tickers: ['URTH', 'EEM'],
         tag: 'bullish'
       },
       {
         source: 'Boerse Online',
-        time: 'vor 6 Std.',
-        title: 'US-Konsumgueter: Procter & Gamble und Coca-Cola als defensive Stabilitaetsanker',
-        excerpt: 'In unsicheren Maerkten setzen Anleger verstaerkt auf Basiskonsumgueter. Beide Unternehmen heben ihre Dividenden an.',
-        tickers: ['PG', 'KO'],
+        time: 'vor 3 Std.',
+        title: 'S&P 500 in der Konsolidierung: Techaktion unter Druck',
+        excerpt: 'Nach der starken Rally der letzten Monate kommen US-Aktien zurueck. Der S&P 500 ETF handelt knapp unter seinen Hochs.',
+        tickers: ['SPY'],
         tag: 'neutral'
       },
       {
-        source: 'Bloomberg',
-        time: 'vor 8 Std.',
-        title: 'Amazon expandiert Cloud-Geschaeft: AWS kuendigt neue KI-Services an',
-        excerpt: 'Mit Amazon Bedrock 3.0 und neuen Partnermodellen will AWS seine fuehrende Position im Cloud-Markt ausbau.',
-        tickers: ['AMZN', 'MSFT', 'GOOGL'],
+        source: 'Financial Times',
+        time: 'vor 4 Std.',
+        title: 'Euro Stoxx 50: Europaeische Aktien holen gegenueber USA auf',
+        excerpt: 'Bewertungsvorteile und ein stabiles Wirtschaftsumfeld machen europaeische Aktien wieder attraktiv. Der Euro Stoxx 50 outperformt den S&P 500 im laufenden Jahr.',
+        tickers: ['FEZ'],
+        tag: 'bullish'
+      },
+      {
+        source: 'Manager Magazin',
+        time: 'vor 5 Std.',
+        title: 'Emerging Markets: China-Stimulus beflügelt Schwellenlaender-ETFs',
+        excerpt: 'Die chinesische Regierung kuendigt ein umfangreiches Konjunkturprogramm an. Schwellenlaender-ETFs wie der iShares MSCI EM legen deutlich zu.',
+        tickers: ['EEM'],
+        tag: 'bullish'
+      },
+      {
+        source: 'CNBC',
+        time: 'vor 7 Std.',
+        title: 'ETF-Boom haelt an: Passive Investments erreichen neues Rekordhoch',
+        excerpt: 'Weltweit sind nun ueber 12 Billionen Dollar in passive ETF-Strategien investiert. Besonders MSCI World und S&P 500 Produkte verzeichnen starke Nachfrage.',
+        tickers: ['URTH', 'SPY', 'FEZ'],
         tag: 'bullish'
       },
     ];
@@ -1560,7 +1543,7 @@
     // UTILITIES
     // ==========================================
 
-    function formatCurrency(val, currency = 'USD') {
+    function formatCurrency(val, currency = 'EUR') {
       return new Intl.NumberFormat('de-DE', {
         style: 'currency',
         currency,
@@ -1695,8 +1678,8 @@
       kpiDay.className = `kpi-value ${stats.totalDayChange >= 0 ? 'positive' : 'negative'}`;
       document.getElementById('kpiDayChangePct').textContent = formatPct(stats.totalDayChangePct);
 
-      // Dividends (demo)
-      document.getElementById('kpiDividends').textContent = formatCurrency(1847.30);
+      // Anzahl Positionen
+      document.getElementById('kpiDividends').textContent = portfolioData.length;
 
       renderCharts();
       renderHoldings();

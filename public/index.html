@@ -1,0 +1,2879 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #09090b;
+      --bg-secondary: #111113;
+      --bg-card: #18181b;
+      --bg-card-hover: #1f1f23;
+      --bg-elevated: #232328;
+      --border: #27272a;
+      --border-hover: #3f3f46;
+      --text-primary: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.2);
+      --green: #22c55e;
+      --green-bg: rgba(34, 197, 94, 0.1);
+      --green-border: rgba(34, 197, 94, 0.25);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.1);
+      --red-border: rgba(239, 68, 68, 0.25);
+      --yellow: #eab308;
+      --yellow-bg: rgba(234, 179, 8, 0.1);
+      --blue: #3b82f6;
+      --blue-bg: rgba(59, 130, 246, 0.1);
+      --cyan: #06b6d4;
+      --purple: #a855f7;
+      --pink: #ec4899;
+      --orange: #f97316;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+      --shadow-lg: 0 10px 40px rgba(0,0,0,0.4);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(99, 102, 241, 0.08), transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 10%, rgba(168, 85, 247, 0.06), transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 100%, rgba(6, 182, 212, 0.05), transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Layout */
+    .app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top Bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 2rem;
+      background: rgba(17, 17, 19, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 12px var(--accent-glow);
+    }
+
+    .brand-name {
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-tag {
+      font-size: 0.625rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: var(--bg-elevated);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    .btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-hover);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-light);
+      border-color: var(--accent-light);
+    }
+
+    .date-display {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 3rem;
+    }
+
+    /* Portfolio Header */
+    .portfolio-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .portfolio-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .portfolio-value {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .portfolio-change {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .change-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .change-badge.positive {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid var(--green-border);
+    }
+
+    .change-badge.negative {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid var(--red-border);
+    }
+
+    .change-abs {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .portfolio-sub {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* KPI Row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      transition: all 0.2s;
+    }
+
+    .kpi-card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+    }
+
+    .kpi-label {
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .kpi-value {
+      font-size: 1.375rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-value.positive { color: var(--green); }
+    .kpi-value.negative { color: var(--red); }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.25rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+
+    .tab-btn {
+      padding: 0.6rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      font-family: inherit;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-secondary);
+    }
+
+    .tab-btn.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Chart panels */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .panel-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .period-btn {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      font-family: inherit;
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .period-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+    }
+
+    .period-btn.active {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 280px;
+    }
+
+    .chart-container-sm {
+      position: relative;
+      height: 260px;
+    }
+
+    /* Holdings Table */
+    .table-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .table-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-toolbar h3 {
+      font-size: 0.9375rem;
+      font-weight: 600;
+    }
+
+    .search-input {
+      padding: 0.4rem 0.75rem;
+      padding-left: 2rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.8125rem;
+      outline: none;
+      width: 220px;
+      transition: border-color 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 0.6rem center;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+    }
+
+    .holdings-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .holdings-table th {
+      padding: 0.65rem 1.25rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.2s;
+      white-space: nowrap;
+    }
+
+    .holdings-table th:hover {
+      color: var(--text-secondary);
+    }
+
+    .holdings-table th.sorted {
+      color: var(--accent-light);
+    }
+
+    .holdings-table th .sort-arrow {
+      margin-left: 0.25rem;
+      opacity: 0.4;
+    }
+
+    .holdings-table th.sorted .sort-arrow {
+      opacity: 1;
+    }
+
+    .holdings-table td {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.8125rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .holdings-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .holdings-table tr:hover td {
+      background: var(--bg-card-hover);
+    }
+
+    .holdings-table .text-right {
+      text-align: right;
+    }
+
+    .asset-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .asset-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .asset-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .asset-name {
+      font-weight: 600;
+      font-size: 0.8125rem;
+    }
+
+    .asset-ticker {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8125rem;
+    }
+
+    .positive { color: var(--green); }
+    .negative { color: var(--red); }
+
+    .weight-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .weight-track {
+      width: 60px;
+      height: 4px;
+      background: var(--bg-elevated);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .weight-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--accent);
+      transition: width 0.5s ease;
+    }
+
+    /* News Feed */
+    .news-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .news-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .news-card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+      transform: translateY(-1px);
+    }
+
+    .news-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .news-source {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--accent-light);
+    }
+
+    .news-time {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+    }
+
+    .news-tag {
+      font-size: 0.625rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .news-tag.bullish {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    .news-tag.bearish {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .news-tag.neutral {
+      background: var(--yellow-bg);
+      color: var(--yellow);
+    }
+
+    .news-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 0.35rem;
+    }
+
+    .news-excerpt {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .news-tickers {
+      display: flex;
+      gap: 0.35rem;
+      margin-top: 0.75rem;
+    }
+
+    .news-ticker {
+      font-size: 0.625rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    /* Top Movers */
+    .movers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .mover-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      transition: all 0.2s;
+    }
+
+    .mover-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .mover-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+    }
+
+    .mover-ticker {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .mover-name {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .mover-price {
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .mover-change {
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Sparkline */
+    .sparkline-container {
+      height: 40px;
+      margin-top: 0.5rem;
+    }
+
+    /* CSV Upload Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      width: 90%;
+      max-width: 520px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal p {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .drop-zone-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .drop-zone-text {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .drop-zone-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .csv-format {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Sector breakdown */
+    .sector-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .sector-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .sector-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .sector-name {
+      font-size: 0.8125rem;
+      flex: 1;
+    }
+
+    .sector-weight {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .sector-value {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 80px;
+      text-align: right;
+    }
+
+    /* Bottom Grid */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* Benchmark Comparison */
+    .benchmark-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .bench-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .bench-toggle:hover {
+      border-color: var(--border-hover);
+      color: var(--text-secondary);
+    }
+
+    .bench-toggle.active {
+      color: var(--text-primary);
+    }
+
+    .bench-toggle .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .compare-period-btn {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      font-family: inherit;
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .compare-period-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+    }
+
+    .compare-period-btn.active {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .compare-table th {
+      padding: 0.65rem 1rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .compare-table th:first-child {
+      text-align: left;
+    }
+
+    .compare-table td {
+      padding: 0.65rem 1rem;
+      font-size: 0.8125rem;
+      font-family: 'JetBrains Mono', monospace;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .compare-table td:first-child {
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+    }
+
+    .compare-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .compare-table tr:hover td {
+      background: var(--bg-card-hover);
+    }
+
+    .compare-table .highlight-row td {
+      background: rgba(99, 102, 241, 0.06);
+      font-weight: 600;
+    }
+
+    .compare-table .highlight-row td:first-child {
+      font-weight: 700;
+    }
+
+    .bench-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .bench-label .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-hover);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+      .bottom-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 0.75rem 1rem;
+      }
+      .main {
+        padding: 1rem;
+      }
+      .kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .portfolio-value {
+        font-size: 2rem;
+      }
+      .brand-tag {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .kpi-row {
+        grid-template-columns: 1fr;
+      }
+      .movers-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Hidden file input */
+    #csvFileInput {
+      display: none;
+    }
+
+    /* Notification toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 0.75rem 1.25rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      box-shadow: var(--shadow-lg);
+      z-index: 300;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--green-border);
+    }
+
+    /* Status indicator */
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .status-indicator::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--yellow);
+    }
+
+    .status-indicator.live::before {
+      background: var(--green);
+      animation: livePulse 2s infinite;
+    }
+
+    .status-indicator.offline::before {
+      background: var(--text-muted);
+    }
+
+    @keyframes livePulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--green); }
+      50% { opacity: 0.5; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-bg"></div>
+  <input type="file" id="csvFileInput" accept=".csv">
+
+  <div class="app">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="brand">
+          <div class="brand-icon">PF</div>
+          <span class="brand-name">Portfolio Dashboard</span>
+          <span class="brand-tag">BETA</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="date-display" id="dateDisplay"></span>
+        <span class="status-indicator" id="modeIndicator" title="Datenquelle"></span>
+        <button class="btn" onclick="refreshLiveData()">Aktualisieren</button>
+        <button class="btn" onclick="openCsvModal()">CSV Import</button>
+        <button class="btn btn-primary" onclick="exportData()">Export</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+      <!-- Portfolio Header -->
+      <div class="portfolio-header">
+        <div class="portfolio-value-row">
+          <div class="portfolio-value" id="totalValue">--</div>
+          <div class="portfolio-change">
+            <span class="change-badge positive" id="changeBadge">--</span>
+            <span class="change-abs" id="changeAbs">--</span>
+          </div>
+        </div>
+        <div class="portfolio-sub">Gesamtportfolio &middot; Letzte Aktualisierung: <span id="lastUpdate">--</span></div>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Investiert</div>
+          <div class="kpi-value" id="kpiInvested">--</div>
+          <div class="kpi-sub">Einstandswert</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Unrealisierter G/V</div>
+          <div class="kpi-value positive" id="kpiUnrealized">--</div>
+          <div class="kpi-sub" id="kpiUnrealizedPct">--</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Tagesveraenderung</div>
+          <div class="kpi-value" id="kpiDayChange">--</div>
+          <div class="kpi-sub" id="kpiDayChangePct">--</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Dividenden YTD</div>
+          <div class="kpi-value" id="kpiDividends">--</div>
+          <div class="kpi-sub">Erhalten in 2026</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="overview">Uebersicht</button>
+        <button class="tab-btn" data-tab="holdings">Positionen</button>
+        <button class="tab-btn" data-tab="performance">Performance</button>
+        <button class="tab-btn" data-tab="compare">Vergleich</button>
+        <button class="tab-btn" data-tab="news">Nachrichten</button>
+      </div>
+
+      <!-- Tab: Overview -->
+      <div class="tab-content active" id="tab-overview">
+        <div class="chart-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Portfolio Entwicklung</span>
+              <div class="panel-actions">
+                <button class="period-btn" data-period="1W">1W</button>
+                <button class="period-btn" data-period="1M">1M</button>
+                <button class="period-btn active" data-period="3M">3M</button>
+                <button class="period-btn" data-period="1J">1J</button>
+                <button class="period-btn" data-period="MAX">MAX</button>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="performanceChart"></canvas>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Allokation</span>
+            </div>
+            <div class="chart-container-sm">
+              <canvas id="allocationChart"></canvas>
+            </div>
+            <div class="sector-list" id="sectorList"></div>
+          </div>
+        </div>
+
+        <!-- Top Movers -->
+        <div class="panel" style="margin-bottom: 1rem;">
+          <div class="panel-header">
+            <span class="panel-title">Top Beweger heute</span>
+          </div>
+          <div class="movers-grid" id="moversGrid"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Holdings -->
+      <div class="tab-content" id="tab-holdings">
+        <div class="table-wrapper">
+          <div class="table-toolbar">
+            <h3>Alle Positionen (<span id="holdingsCount">0</span>)</h3>
+            <input type="text" class="search-input" placeholder="Position suchen..." id="searchInput" oninput="filterHoldings()">
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th data-sort="name" class="sorted">Name <span class="sort-arrow">&#9650;</span></th>
+                  <th data-sort="shares" class="text-right">Stueck <span class="sort-arrow">&#9650;</span></th>
+                  <th data-sort="buyPrice" class="text-right">Kaufkurs <span class="sort-arrow">&#9650;</span></th>
+                  <th data-sort="currentPrice" class="text-right">Kurs <span class="sort-arrow">&#9650;</span></th>
+                  <th data-sort="value" class="text-right">Wert <span class="sort-arrow">&#9650;</span></th>
+                  <th data-sort="gain" class="text-right">G/V <span class="sort-arrow">&#9650;</span></th>
+                  <th data-sort="gainPct" class="text-right">G/V % <span class="sort-arrow">&#9650;</span></th>
+                  <th data-sort="weight" class="text-right">Gewicht <span class="sort-arrow">&#9650;</span></th>
+                </tr>
+              </thead>
+              <tbody id="holdingsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Performance -->
+      <div class="tab-content" id="tab-performance">
+        <div class="chart-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Kumulative Rendite</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="cumulativeChart"></canvas>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Monatliche Rendite</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="monthlyChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Sektor-Performance</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="sectorPerfChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Vergleich -->
+      <div class="tab-content" id="tab-compare">
+        <!-- Benchmark Selector -->
+        <div class="panel" style="margin-bottom: 1rem;">
+          <div class="panel-header">
+            <span class="panel-title">Portfolio vs. Welt-Indizes</span>
+            <div class="panel-actions">
+              <button class="compare-period-btn" data-cperiod="1M">1M</button>
+              <button class="compare-period-btn" data-cperiod="3M">3M</button>
+              <button class="compare-period-btn active" data-cperiod="6M">6M</button>
+              <button class="compare-period-btn" data-cperiod="1J">1J</button>
+              <button class="compare-period-btn" data-cperiod="3J">3J</button>
+              <button class="compare-period-btn" data-cperiod="MAX">MAX</button>
+            </div>
+          </div>
+          <div class="benchmark-toggles" id="benchmarkToggles"></div>
+          <div class="chart-container" style="height: 380px;">
+            <canvas id="compareChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Stats Comparison -->
+        <div class="panel" style="margin-bottom: 1rem;">
+          <div class="panel-header">
+            <span class="panel-title">Kennzahlen im Vergleich</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="compare-table" id="compareTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Rolling Returns -->
+        <div class="chart-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Outperformance vs. MSCI World</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="alphaChart"></canvas>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Drawdown-Vergleich</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="drawdownChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: News -->
+      <div class="tab-content" id="tab-news">
+        <div class="news-feed" id="newsFeed"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSV Modal -->
+  <div class="modal-overlay" id="csvModal">
+    <div class="modal">
+      <h2>CSV Datei importieren</h2>
+      <p>Lade deine Portfolio-Daten als CSV-Datei hoch. Die Datei wird lokal verarbeitet.</p>
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">&#128193;</div>
+        <div class="drop-zone-text">CSV-Datei hierher ziehen oder klicken</div>
+        <div class="drop-zone-sub">.csv Dateien bis 10 MB</div>
+      </div>
+      <div class="csv-format">
+        Erwartetes Format (Semikolon oder Komma getrennt):<br>
+        Name;Ticker;Stueck;Kaufkurs;Aktueller Kurs;Sektor<br>
+        Apple;AAPL;50;142.50;178.20;Technologie
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeCsvModal()">Abbrechen</button>
+        <button class="btn btn-primary" id="importBtn" disabled onclick="processImport()">Importieren</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ==========================================
+    // DATA
+    // ==========================================
+
+    const COLORS = {
+      sectors: ['#6366f1', '#a855f7', '#ec4899', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#64748b', '#f43f5e'],
+      gradientTop: 'rgba(99, 102, 241, 0.3)',
+      gradientBottom: 'rgba(99, 102, 241, 0.0)',
+    };
+
+    const sectorColors = {};
+
+    // Demo data - will be replaced by CSV import
+    let portfolioData = [
+      { name: 'Apple Inc.', ticker: 'AAPL', shares: 50, buyPrice: 142.50, currentPrice: 198.30, sector: 'Technologie', dayChange: 1.8 },
+      { name: 'Microsoft Corp.', ticker: 'MSFT', shares: 30, buyPrice: 285.00, currentPrice: 428.50, sector: 'Technologie', dayChange: -0.5 },
+      { name: 'NVIDIA Corp.', ticker: 'NVDA', shares: 25, buyPrice: 450.00, currentPrice: 875.20, sector: 'Technologie', dayChange: 3.2 },
+      { name: 'Amazon.com', ticker: 'AMZN', shares: 20, buyPrice: 128.00, currentPrice: 208.90, sector: 'Zyklisch', dayChange: 0.9 },
+      { name: 'Alphabet Inc.', ticker: 'GOOGL', shares: 35, buyPrice: 105.00, currentPrice: 178.60, sector: 'Kommunikation', dayChange: -0.3 },
+      { name: 'Tesla Inc.', ticker: 'TSLA', shares: 40, buyPrice: 195.00, currentPrice: 352.40, sector: 'Zyklisch', dayChange: 4.5 },
+      { name: 'JPMorgan Chase', ticker: 'JPM', shares: 25, buyPrice: 140.00, currentPrice: 242.80, sector: 'Finanzen', dayChange: 0.7 },
+      { name: 'Johnson & Johnson', ticker: 'JNJ', shares: 30, buyPrice: 160.00, currentPrice: 158.20, sector: 'Gesundheit', dayChange: -0.2 },
+      { name: 'Visa Inc.', ticker: 'V', shares: 15, buyPrice: 230.00, currentPrice: 315.70, sector: 'Finanzen', dayChange: 1.1 },
+      { name: 'Procter & Gamble', ticker: 'PG', shares: 20, buyPrice: 148.00, currentPrice: 172.50, sector: 'Basiskonsumgueter', dayChange: 0.3 },
+      { name: 'UnitedHealth Group', ticker: 'UNH', shares: 8, buyPrice: 490.00, currentPrice: 562.30, sector: 'Gesundheit', dayChange: -1.1 },
+      { name: 'Mastercard Inc.', ticker: 'MA', shares: 10, buyPrice: 370.00, currentPrice: 528.40, sector: 'Finanzen', dayChange: 0.8 },
+      { name: 'Home Depot', ticker: 'HD', shares: 12, buyPrice: 310.00, currentPrice: 398.60, sector: 'Zyklisch', dayChange: -0.6 },
+      { name: 'Coca-Cola Co.', ticker: 'KO', shares: 60, buyPrice: 58.00, currentPrice: 62.80, sector: 'Basiskonsumgueter', dayChange: 0.1 },
+      { name: 'Broadcom Inc.', ticker: 'AVGO', shares: 10, buyPrice: 680.00, currentPrice: 1245.80, sector: 'Technologie', dayChange: 2.4 },
+    ];
+
+    let pendingCsvData = null;
+
+    // Demo news
+    const newsData = [
+      {
+        source: 'Bloomberg',
+        time: 'vor 25 Min.',
+        title: 'NVIDIA uebertrifft Erwartungen: KI-Nachfrage treibt Umsatz auf Rekordniveau',
+        excerpt: 'Der Chipkonzern meldete einen Quartalsumsatz von $35 Mrd., angetrieben durch die massive Nachfrage nach KI-Beschleunigern im Rechenzentrumsgeschaeft.',
+        tickers: ['NVDA', 'AMD', 'INTC'],
+        tag: 'bullish'
+      },
+      {
+        source: 'Reuters',
+        time: 'vor 1 Std.',
+        title: 'Fed signalisiert Zurueckhaltung bei weiteren Zinssenkungen',
+        excerpt: 'Die US-Notenbank deutete an, die Zinssaetze auf dem aktuellen Niveau zu belassen und verwies auf weiterhin robuste Arbeitsmarktdaten.',
+        tickers: ['JPM', 'V', 'MA'],
+        tag: 'bearish'
+      },
+      {
+        source: 'Handelsblatt',
+        time: 'vor 2 Std.',
+        title: 'Apple plant neues KI-Oekosystem fuer iPhone und Mac',
+        excerpt: 'Mit der naechsten Generation von Apple Intelligence soll der Konzern seine KI-Strategie massiv ausbauen und die Integration in alle Geraete vertiefen.',
+        tickers: ['AAPL', 'MSFT', 'GOOGL'],
+        tag: 'bullish'
+      },
+      {
+        source: 'CNBC',
+        time: 'vor 3 Std.',
+        title: 'Tesla stellt autonomes Ride-Hailing-Netzwerk in Austin vor',
+        excerpt: 'Elon Musk praesentierte den Start eines Robotaxi-Dienstes in der texanischen Hauptstadt. Analysten sehen das als wichtigen Meilenstein.',
+        tickers: ['TSLA'],
+        tag: 'bullish'
+      },
+      {
+        source: 'Financial Times',
+        time: 'vor 4 Std.',
+        title: 'Johnson & Johnson unter Druck: Patent-Klippe sorgt fuer Unsicherheit',
+        excerpt: 'Mehrere Blockbuster-Medikamente verlieren in den naechsten Jahren ihren Patentschutz. Analysten senken ihre Kursziele.',
+        tickers: ['JNJ', 'UNH'],
+        tag: 'bearish'
+      },
+      {
+        source: 'Manager Magazin',
+        time: 'vor 5 Std.',
+        title: 'Broadcom profitiert von KI-Infrastruktur: Analysten erhoehen Kursziele',
+        excerpt: 'Der Halbleiter-Konzern profitiert zunehmend von der Nachfrage nach kundenspezifischen KI-Chips und Netzwerkloesungen.',
+        tickers: ['AVGO', 'NVDA'],
+        tag: 'bullish'
+      },
+      {
+        source: 'Boerse Online',
+        time: 'vor 6 Std.',
+        title: 'US-Konsumgueter: Procter & Gamble und Coca-Cola als defensive Stabilitaetsanker',
+        excerpt: 'In unsicheren Maerkten setzen Anleger verstaerkt auf Basiskonsumgueter. Beide Unternehmen heben ihre Dividenden an.',
+        tickers: ['PG', 'KO'],
+        tag: 'neutral'
+      },
+      {
+        source: 'Bloomberg',
+        time: 'vor 8 Std.',
+        title: 'Amazon expandiert Cloud-Geschaeft: AWS kuendigt neue KI-Services an',
+        excerpt: 'Mit Amazon Bedrock 3.0 und neuen Partnermodellen will AWS seine fuehrende Position im Cloud-Markt ausbau.',
+        tickers: ['AMZN', 'MSFT', 'GOOGL'],
+        tag: 'bullish'
+      },
+    ];
+
+    // ==========================================
+    // YAHOO FINANCE API LAYER
+    // ==========================================
+
+    const API_BASE = '/api';
+    let isLiveMode = false;
+    let liveQuotesCache = {};
+    let liveIndicesCache = {};
+    let liveNewsCache = [];
+
+    // Fetch live quotes from Yahoo Finance via our Firebase Function
+    async function fetchLiveQuotes() {
+      const tickers = portfolioData.map(h => h.ticker).join(',');
+      if (!tickers) return false;
+      try {
+        const res = await fetch(`${API_BASE}/quotes?symbols=${tickers}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        liveQuotesCache = data.quotes;
+
+        // Update portfolioData with real prices
+        portfolioData.forEach(h => {
+          const q = liveQuotesCache[h.ticker];
+          if (q) {
+            h.currentPrice = q.price;
+            h.dayChange = q.changePercent || 0;
+            if (q.name && h.name.startsWith('???')) h.name = q.name;
+          }
+        });
+        isLiveMode = true;
+        return true;
+      } catch (err) {
+        console.log('Live quotes unavailable, using local data:', err.message);
+        return false;
+      }
+    }
+
+    // Fetch index history data for comparison tab
+    async function fetchLiveIndices(period) {
+      try {
+        const res = await fetch(`${API_BASE}/indices?period=${period || '6M'}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        liveIndicesCache = data.indices;
+        return true;
+      } catch (err) {
+        console.log('Live indices unavailable, using simulated data:', err.message);
+        return false;
+      }
+    }
+
+    // Fetch historical data for a symbol (for performance chart)
+    async function fetchHistory(symbol, period) {
+      try {
+        const res = await fetch(`${API_BASE}/history?symbol=${symbol}&period=${period || '3M'}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      } catch (err) {
+        console.log(`History for ${symbol} unavailable:`, err.message);
+        return null;
+      }
+    }
+
+    // Fetch live news
+    async function fetchLiveNews() {
+      const tickers = portfolioData.map(h => h.ticker).join(',');
+      try {
+        const res = await fetch(`${API_BASE}/news?tickers=${tickers}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        liveNewsCache = data.news || [];
+        return true;
+      } catch (err) {
+        console.log('Live news unavailable, using demo news:', err.message);
+        return false;
+      }
+    }
+
+    // Refresh all live data
+    async function refreshLiveData() {
+      showToast('Aktualisiere Kurse...');
+      const quotesOk = await fetchLiveQuotes();
+      if (quotesOk) {
+        renderDashboard();
+        showToast('Live-Kurse aktualisiert (Yahoo Finance)');
+      } else {
+        renderDashboard();
+        showToast('Offline-Modus: Demo-Daten werden angezeigt');
+      }
+      // Fetch news in the background
+      fetchLiveNews().then(ok => {
+        if (ok) renderNews();
+      });
+    }
+
+    // Auto-refresh every 60 seconds when live
+    let refreshInterval = null;
+    function startAutoRefresh() {
+      if (refreshInterval) clearInterval(refreshInterval);
+      refreshInterval = setInterval(async () => {
+        if (isLiveMode) {
+          await fetchLiveQuotes();
+          renderDashboard();
+        }
+      }, 60000);
+    }
+
+    // ==========================================
+    // UTILITIES
+    // ==========================================
+
+    function formatCurrency(val, currency = 'USD') {
+      return new Intl.NumberFormat('de-DE', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(val);
+    }
+
+    function formatPct(val) {
+      const sign = val >= 0 ? '+' : '';
+      return sign + val.toFixed(2) + '%';
+    }
+
+    function formatNumber(val) {
+      return new Intl.NumberFormat('de-DE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(val);
+    }
+
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // ==========================================
+    // CALCULATIONS
+    // ==========================================
+
+    function calcPortfolio() {
+      let totalValue = 0;
+      let totalInvested = 0;
+      let totalDayChange = 0;
+
+      portfolioData.forEach(h => {
+        const value = h.shares * h.currentPrice;
+        const invested = h.shares * h.buyPrice;
+        const dayChangeAbs = value * (h.dayChange / 100);
+        h._value = value;
+        h._invested = invested;
+        h._gain = value - invested;
+        h._gainPct = ((value - invested) / invested) * 100;
+        h._dayChangeAbs = dayChangeAbs;
+        totalValue += value;
+        totalInvested += invested;
+        totalDayChange += dayChangeAbs;
+      });
+
+      portfolioData.forEach(h => {
+        h._weight = (h._value / totalValue) * 100;
+      });
+
+      return {
+        totalValue,
+        totalInvested,
+        totalGain: totalValue - totalInvested,
+        totalGainPct: ((totalValue - totalInvested) / totalInvested) * 100,
+        totalDayChange,
+        totalDayChangePct: (totalDayChange / (totalValue - totalDayChange)) * 100,
+      };
+    }
+
+    function getSectorBreakdown() {
+      const sectors = {};
+      portfolioData.forEach(h => {
+        if (!sectors[h.sector]) sectors[h.sector] = 0;
+        sectors[h.sector] += h._value;
+      });
+      const total = Object.values(sectors).reduce((a, b) => a + b, 0);
+      const result = Object.entries(sectors)
+        .map(([name, value]) => ({ name, value, weight: (value / total) * 100 }))
+        .sort((a, b) => b.value - a.value);
+
+      result.forEach((s, i) => {
+        sectorColors[s.name] = COLORS.sectors[i % COLORS.sectors.length];
+      });
+      return result;
+    }
+
+    // ==========================================
+    // RENDER
+    // ==========================================
+
+    function renderDashboard() {
+      const stats = calcPortfolio();
+
+      // Mode indicator
+      const modeEl = document.getElementById('modeIndicator');
+      const brandTag = document.querySelector('.brand-tag');
+      if (isLiveMode) {
+        modeEl.textContent = 'LIVE';
+        modeEl.className = 'status-indicator live';
+        brandTag.textContent = 'LIVE';
+        brandTag.style.background = 'var(--green-bg)';
+        brandTag.style.color = 'var(--green)';
+      } else {
+        modeEl.textContent = 'DEMO';
+        modeEl.className = 'status-indicator offline';
+        brandTag.textContent = 'DEMO';
+        brandTag.style.background = '';
+        brandTag.style.color = '';
+      }
+
+      // Date
+      document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('de-DE', {
+        weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
+      });
+
+      // Total value
+      document.getElementById('totalValue').textContent = formatCurrency(stats.totalValue);
+
+      // Change badge
+      const changeBadge = document.getElementById('changeBadge');
+      changeBadge.textContent = formatPct(stats.totalDayChangePct);
+      changeBadge.className = `change-badge ${stats.totalDayChange >= 0 ? 'positive' : 'negative'}`;
+      document.getElementById('changeAbs').textContent = (stats.totalDayChange >= 0 ? '+' : '') + formatCurrency(stats.totalDayChange);
+
+      // Last update
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+
+      // KPIs
+      document.getElementById('kpiInvested').textContent = formatCurrency(stats.totalInvested);
+      const kpiUnreal = document.getElementById('kpiUnrealized');
+      kpiUnreal.textContent = (stats.totalGain >= 0 ? '+' : '') + formatCurrency(stats.totalGain);
+      kpiUnreal.className = `kpi-value ${stats.totalGain >= 0 ? 'positive' : 'negative'}`;
+      document.getElementById('kpiUnrealizedPct').textContent = formatPct(stats.totalGainPct);
+
+      const kpiDay = document.getElementById('kpiDayChange');
+      kpiDay.textContent = (stats.totalDayChange >= 0 ? '+' : '') + formatCurrency(stats.totalDayChange);
+      kpiDay.className = `kpi-value ${stats.totalDayChange >= 0 ? 'positive' : 'negative'}`;
+      document.getElementById('kpiDayChangePct').textContent = formatPct(stats.totalDayChangePct);
+
+      // Dividends (demo)
+      document.getElementById('kpiDividends').textContent = formatCurrency(1847.30);
+
+      renderCharts();
+      renderHoldings();
+      renderMovers();
+      renderNews();
+      renderPerformanceTab();
+    }
+
+    // ==========================================
+    // CHARTS
+    // ==========================================
+
+    let perfChart, allocChart, cumChart, monthChart, sectorPerfChartInstance, compareChartInstance, alphaChartInstance, drawdownChartInstance;
+
+    function renderCharts() {
+      renderPerformanceChart();
+      renderAllocationChart();
+    }
+
+    function renderPerformanceChart() {
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      if (perfChart) perfChart.destroy();
+
+      // Generate demo performance data
+      const labels = [];
+      const data = [];
+      const stats = calcPortfolio();
+      const baseValue = stats.totalInvested;
+      let val = baseValue;
+      const now = new Date();
+
+      for (let i = 90; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        labels.push(d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
+        val += val * (Math.random() * 0.03 - 0.012);
+        data.push(val);
+      }
+      // Last point = actual value
+      data[data.length - 1] = stats.totalValue;
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+      gradient.addColorStop(0, COLORS.gradientTop);
+      gradient.addColorStop(1, COLORS.gradientBottom);
+
+      perfChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            borderColor: '#6366f1',
+            borderWidth: 2,
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: '#6366f1',
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              padding: 12,
+              titleFont: { size: 11 },
+              bodyFont: { size: 13, weight: 600 },
+              displayColors: false,
+              callbacks: {
+                label: (ctx) => formatCurrency(ctx.raw),
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                maxTicksLimit: 8,
+              },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                callback: (v) => (v / 1000).toFixed(0) + 'k',
+              },
+              border: { display: false }
+            }
+          },
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          }
+        }
+      });
+    }
+
+    function renderAllocationChart() {
+      const ctx = document.getElementById('allocationChart').getContext('2d');
+      if (allocChart) allocChart.destroy();
+
+      const sectors = getSectorBreakdown();
+      const sectorList = document.getElementById('sectorList');
+      sectorList.innerHTML = sectors.map((s, i) => `
+        <div class="sector-item">
+          <div class="sector-dot" style="background: ${COLORS.sectors[i % COLORS.sectors.length]}"></div>
+          <span class="sector-name">${s.name}</span>
+          <span class="sector-weight">${s.weight.toFixed(1)}%</span>
+          <span class="sector-value">${formatCurrency(s.value)}</span>
+        </div>
+      `).join('');
+
+      allocChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: sectors.map(s => s.name),
+          datasets: [{
+            data: sectors.map(s => s.value),
+            backgroundColor: sectors.map((_, i) => COLORS.sectors[i % COLORS.sectors.length]),
+            borderColor: '#18181b',
+            borderWidth: 3,
+            hoverBorderColor: '#27272a',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              padding: 12,
+              callbacks: {
+                label: (ctx) => {
+                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = ((ctx.raw / total) * 100).toFixed(1);
+                  return `${ctx.label}: ${formatCurrency(ctx.raw)} (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // HOLDINGS TABLE
+    // ==========================================
+
+    let sortCol = 'value';
+    let sortDir = -1; // -1 = desc
+
+    function renderHoldings() {
+      const body = document.getElementById('holdingsBody');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+
+      let filtered = portfolioData;
+      if (search) {
+        filtered = filtered.filter(h =>
+          h.name.toLowerCase().includes(search) ||
+          h.ticker.toLowerCase().includes(search) ||
+          h.sector.toLowerCase().includes(search)
+        );
+      }
+
+      const sorted = [...filtered].sort((a, b) => {
+        let aVal, bVal;
+        switch (sortCol) {
+          case 'name': aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); return sortDir * aVal.localeCompare(bVal);
+          case 'shares': aVal = a.shares; bVal = b.shares; break;
+          case 'buyPrice': aVal = a.buyPrice; bVal = b.buyPrice; break;
+          case 'currentPrice': aVal = a.currentPrice; bVal = b.currentPrice; break;
+          case 'value': aVal = a._value; bVal = b._value; break;
+          case 'gain': aVal = a._gain; bVal = b._gain; break;
+          case 'gainPct': aVal = a._gainPct; bVal = b._gainPct; break;
+          case 'weight': aVal = a._weight; bVal = b._weight; break;
+          default: aVal = a._value; bVal = b._value;
+        }
+        return sortDir * (aVal - bVal);
+      });
+
+      document.getElementById('holdingsCount').textContent = sorted.length;
+
+      body.innerHTML = sorted.map(h => {
+        const bgColor = sectorColors[h.sector] || '#6366f1';
+        return `
+          <tr>
+            <td>
+              <div class="asset-cell">
+                <div class="asset-icon" style="background: ${bgColor}20; color: ${bgColor}; border: 1px solid ${bgColor}30;">
+                  ${h.ticker.slice(0, 3)}
+                </div>
+                <div class="asset-info">
+                  <span class="asset-name">${h.name}</span>
+                  <span class="asset-ticker">${h.ticker}</span>
+                </div>
+              </div>
+            </td>
+            <td class="text-right mono">${h.shares}</td>
+            <td class="text-right mono">${formatNumber(h.buyPrice)}</td>
+            <td class="text-right mono">${formatNumber(h.currentPrice)}</td>
+            <td class="text-right mono" style="font-weight: 600;">${formatCurrency(h._value)}</td>
+            <td class="text-right mono ${h._gain >= 0 ? 'positive' : 'negative'}">${(h._gain >= 0 ? '+' : '') + formatCurrency(h._gain)}</td>
+            <td class="text-right mono ${h._gainPct >= 0 ? 'positive' : 'negative'}">${formatPct(h._gainPct)}</td>
+            <td class="text-right">
+              <div class="weight-bar">
+                <span class="mono">${h._weight.toFixed(1)}%</span>
+                <div class="weight-track"><div class="weight-fill" style="width: ${h._weight}%; background: ${bgColor};"></div></div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterHoldings() {
+      renderHoldings();
+    }
+
+    // Table sort
+    document.querySelectorAll('.holdings-table th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.sort;
+        if (sortCol === col) {
+          sortDir *= -1;
+        } else {
+          sortCol = col;
+          sortDir = -1;
+        }
+        document.querySelectorAll('.holdings-table th').forEach(t => t.classList.remove('sorted'));
+        th.classList.add('sorted');
+        th.querySelector('.sort-arrow').innerHTML = sortDir === 1 ? '&#9650;' : '&#9660;';
+        renderHoldings();
+      });
+    });
+
+    // ==========================================
+    // TOP MOVERS
+    // ==========================================
+
+    function renderMovers() {
+      const grid = document.getElementById('moversGrid');
+      const sorted = [...portfolioData].sort((a, b) => Math.abs(b.dayChange) - Math.abs(a.dayChange)).slice(0, 6);
+
+      grid.innerHTML = sorted.map(h => {
+        const isPositive = h.dayChange >= 0;
+        const dayAbs = h._value * (h.dayChange / 100);
+        return `
+          <div class="mover-card">
+            <div class="mover-header">
+              <span class="mover-ticker">${h.ticker}</span>
+              <span class="mover-change ${isPositive ? 'positive' : 'negative'}">${formatPct(h.dayChange)}</span>
+            </div>
+            <div class="mover-name">${h.name}</div>
+            <div class="mover-price">${formatCurrency(h.currentPrice)}</div>
+            <div class="mover-change ${isPositive ? 'positive' : 'negative'}" style="font-size: 0.75rem; margin-top: 0.25rem;">${(isPositive ? '+' : '') + formatCurrency(dayAbs)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // NEWS
+    // ==========================================
+
+    function renderNews() {
+      const feed = document.getElementById('newsFeed');
+
+      // Use live news if available, otherwise demo
+      if (liveNewsCache.length > 0) {
+        feed.innerHTML = liveNewsCache.map(n => {
+          const timeAgo = n.publishedAt ? formatTimeAgo(new Date(n.publishedAt)) : '';
+          const tickers = n.relatedTickers || [];
+          // Map Alpha Vantage sentiment to tag class
+          let tagClass = 'neutral';
+          let tagText = 'Neutral';
+          if (n.sentiment) {
+            const s = n.sentiment.toLowerCase();
+            if (s.includes('bullish') || s.includes('positive')) { tagClass = 'bullish'; tagText = 'Positiv'; }
+            else if (s.includes('bearish') || s.includes('negative')) { tagClass = 'bearish'; tagText = 'Negativ'; }
+          }
+          const summary = n.summary ? escapeHtml(n.summary).slice(0, 200) + '...' : '';
+          return `
+            <a class="news-card" href="${escapeHtml(n.link || '#')}" target="_blank" rel="noopener" style="text-decoration: none; color: inherit;">
+              <div class="news-meta">
+                <span class="news-source">${escapeHtml(n.publisher || 'News')}</span>
+                <span class="news-time">${timeAgo}</span>
+                <span class="news-tag ${tagClass}">${tagText}</span>
+              </div>
+              <div class="news-title">${escapeHtml(n.title)}</div>
+              ${summary ? `<div class="news-excerpt">${summary}</div>` : ''}
+              <div class="news-tickers">
+                ${tickers.map(t => `<span class="news-ticker">${escapeHtml(t)}</span>`).join('')}
+              </div>
+            </a>
+          `;
+        }).join('');
+      } else {
+        // Demo news fallback
+        feed.innerHTML = newsData.map(n => `
+          <div class="news-card">
+            <div class="news-meta">
+              <span class="news-source">${n.source}</span>
+              <span class="news-time">${n.time}</span>
+              <span class="news-tag ${n.tag}">${n.tag === 'bullish' ? 'Positiv' : n.tag === 'bearish' ? 'Negativ' : 'Neutral'}</span>
+            </div>
+            <div class="news-title">${n.title}</div>
+            <div class="news-excerpt">${n.excerpt}</div>
+            <div class="news-tickers">
+              ${n.tickers.map(t => `<span class="news-ticker">${t}</span>`).join('')}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function formatTimeAgo(date) {
+      const now = new Date();
+      const diff = now - date;
+      const mins = Math.floor(diff / 60000);
+      const hours = Math.floor(mins / 60);
+      const days = Math.floor(hours / 24);
+      if (mins < 60) return `vor ${mins} Min.`;
+      if (hours < 24) return `vor ${hours} Std.`;
+      return `vor ${days} Tag${days > 1 ? 'en' : ''}`;
+    }
+
+    // ==========================================
+    // PERFORMANCE TAB
+    // ==========================================
+
+    function renderPerformanceTab() {
+      // Cumulative return chart
+      const ctx1 = document.getElementById('cumulativeChart').getContext('2d');
+      if (cumChart) cumChart.destroy();
+
+      const labels = [];
+      const data = [];
+      let cumReturn = 0;
+      const now = new Date();
+
+      for (let i = 365; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        if (d.getDate() === 1 || i === 365 || i === 0) {
+          labels.push(d.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' }));
+        } else {
+          labels.push('');
+        }
+        cumReturn += (Math.random() * 1.2 - 0.45);
+        data.push(cumReturn);
+      }
+
+      const gradient1 = ctx1.createLinearGradient(0, 0, 0, 280);
+      gradient1.addColorStop(0, 'rgba(34, 197, 94, 0.2)');
+      gradient1.addColorStop(1, 'rgba(34, 197, 94, 0.0)');
+
+      cumChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            borderColor: '#22c55e',
+            borderWidth: 2,
+            backgroundColor: gradient1,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              callbacks: { label: (ctx) => formatPct(ctx.raw) }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: { color: '#71717a', font: { size: 10 }, maxTicksLimit: 12 },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: { color: '#71717a', font: { size: 10 }, callback: (v) => v.toFixed(0) + '%' },
+              border: { display: false }
+            }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      });
+
+      // Monthly return chart
+      const ctx2 = document.getElementById('monthlyChart').getContext('2d');
+      if (monthChart) monthChart.destroy();
+
+      const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+      const monthlyData = months.map(() => (Math.random() * 10 - 3));
+
+      monthChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [{
+            data: monthlyData,
+            backgroundColor: monthlyData.map(v => v >= 0 ? 'rgba(34, 197, 94, 0.6)' : 'rgba(239, 68, 68, 0.6)'),
+            borderColor: monthlyData.map(v => v >= 0 ? '#22c55e' : '#ef4444'),
+            borderWidth: 1,
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              callbacks: { label: (ctx) => formatPct(ctx.raw) }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#71717a', font: { size: 10 } },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: { color: '#71717a', font: { size: 10 }, callback: (v) => v.toFixed(0) + '%' },
+              border: { display: false }
+            }
+          }
+        }
+      });
+
+      // Sector performance chart
+      const ctx3 = document.getElementById('sectorPerfChart').getContext('2d');
+      if (sectorPerfChartInstance) sectorPerfChartInstance.destroy();
+
+      const sectors = getSectorBreakdown();
+      const sectorReturns = sectors.map(s => {
+        const items = portfolioData.filter(h => h.sector === s.name);
+        const totalGain = items.reduce((sum, h) => sum + h._gain, 0);
+        const totalInvested = items.reduce((sum, h) => sum + h._invested, 0);
+        return { name: s.name, returnPct: (totalGain / totalInvested) * 100, color: sectorColors[s.name] };
+      }).sort((a, b) => b.returnPct - a.returnPct);
+
+      sectorPerfChartInstance = new Chart(ctx3, {
+        type: 'bar',
+        data: {
+          labels: sectorReturns.map(s => s.name),
+          datasets: [{
+            data: sectorReturns.map(s => s.returnPct),
+            backgroundColor: sectorReturns.map(s => s.color + '99'),
+            borderColor: sectorReturns.map(s => s.color),
+            borderWidth: 1,
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              callbacks: { label: (ctx) => formatPct(ctx.raw) }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: { color: '#71717a', font: { size: 10 }, callback: (v) => v.toFixed(0) + '%' },
+              border: { display: false }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: '#a1a1aa', font: { size: 11 } },
+              border: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // BENCHMARK COMPARISON TAB
+    // ==========================================
+
+    const BENCHMARKS = [
+      { id: 'portfolio', name: 'Mein Portfolio', color: '#6366f1', active: true, annualReturn: null },
+      { id: 'msci_world', name: 'MSCI World', color: '#22c55e', active: true, annualReturn: 0.095 },
+      { id: 'sp500', name: 'S&P 500', color: '#3b82f6', active: true, annualReturn: 0.105 },
+      { id: 'eurostoxx50', name: 'EURO STOXX 50', color: '#f97316', active: false, annualReturn: 0.07 },
+      { id: 'dax', name: 'DAX', color: '#eab308', active: false, annualReturn: 0.08 },
+      { id: 'nasdaq100', name: 'NASDAQ 100', color: '#ec4899', active: false, annualReturn: 0.14 },
+      { id: 'msci_em', name: 'MSCI Emerging Markets', color: '#06b6d4', active: false, annualReturn: 0.05 },
+    ];
+
+    let compareperiod = '6M';
+
+    function getCompareDays() {
+      switch (compareperiod) {
+        case '1M': return 30;
+        case '3M': return 90;
+        case '6M': return 180;
+        case '1J': return 365;
+        case '3J': return 1095;
+        case 'MAX': return 1825;
+        default: return 180;
+      }
+    }
+
+    function generateBenchmarkData(annualReturn, days, volatility = 0.012) {
+      const dailyReturn = annualReturn / 252;
+      const data = [0];
+      for (let i = 1; i <= days; i++) {
+        const noise = (Math.random() - 0.5) * volatility * 2;
+        const prev = data[i - 1];
+        data.push(prev + dailyReturn * 100 + noise * 100);
+      }
+      return data;
+    }
+
+    function generatePortfolioReturns(days) {
+      const stats = calcPortfolio();
+      const totalReturnPct = stats.totalGainPct;
+      const dailyAvg = totalReturnPct / 365;
+      const data = [0];
+      for (let i = 1; i <= days; i++) {
+        const noise = (Math.random() - 0.5) * 0.015 * 2;
+        data.push(data[i - 1] + dailyAvg + noise * 100);
+      }
+      // Ensure last point matches actual portfolio return (scaled to period)
+      const scale = days / 365;
+      const target = totalReturnPct * scale;
+      const current = data[data.length - 1];
+      const adjust = target - current;
+      for (let i = 1; i < data.length; i++) {
+        data[i] += adjust * (i / days);
+      }
+      return data;
+    }
+
+    function renderBenchmarkToggles() {
+      const container = document.getElementById('benchmarkToggles');
+      container.innerHTML = BENCHMARKS.map(b => `
+        <button class="bench-toggle ${b.active ? 'active' : ''}" data-bench="${b.id}"
+                style="${b.active ? `border-color: ${b.color}40; background: ${b.color}10;` : ''}">
+          <span class="dot" style="background: ${b.color};"></span>
+          ${b.name}
+        </button>
+      `).join('');
+
+      container.querySelectorAll('.bench-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const bench = BENCHMARKS.find(b => b.id === btn.dataset.bench);
+          if (bench.id === 'portfolio') return; // portfolio always on
+          bench.active = !bench.active;
+          renderBenchmarkToggles();
+          renderCompareChart();
+          renderCompareTable();
+        });
+      });
+    }
+
+    function renderCompareChart() {
+      const ctx = document.getElementById('compareChart').getContext('2d');
+      if (compareChartInstance) compareChartInstance.destroy();
+
+      const days = getCompareDays();
+      const activeBenchmarks = BENCHMARKS.filter(b => b.active);
+
+      const labels = [];
+      const now = new Date();
+      for (let i = days; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        labels.push(d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
+      }
+
+      const datasets = activeBenchmarks.map(b => {
+        let data;
+        if (b.id === 'portfolio') {
+          data = generatePortfolioReturns(days);
+        } else if (liveIndicesCache[b.id] && liveIndicesCache[b.id].data) {
+          // Use live index data - map to same length as labels
+          const liveData = liveIndicesCache[b.id].data;
+          data = new Array(days + 1).fill(null);
+          const step = Math.max(1, Math.floor(liveData.length / (days + 1)));
+          for (let i = 0; i <= days && i < liveData.length; i++) {
+            const idx = Math.min(Math.floor(i * liveData.length / (days + 1)), liveData.length - 1);
+            data[i] = liveData[idx].returnPct;
+          }
+          // Fill nulls
+          let last = 0;
+          data = data.map(v => { if (v !== null) last = v; return last; });
+        } else {
+          data = generateBenchmarkData(b.annualReturn, days);
+        }
+        b._data = data;
+        return {
+          label: b.name,
+          data,
+          borderColor: b.color,
+          borderWidth: b.id === 'portfolio' ? 2.5 : 1.5,
+          borderDash: b.id === 'portfolio' ? [] : [0],
+          backgroundColor: 'transparent',
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: b.color,
+        };
+      });
+
+      compareChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              padding: 12,
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw >= 0 ? '+' : ''}${ctx.raw.toFixed(2)}%`,
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: { color: '#71717a', font: { size: 10 }, maxTicksLimit: 10 },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                callback: (v) => (v >= 0 ? '+' : '') + v.toFixed(0) + '%',
+              },
+              border: { display: false }
+            }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      });
+    }
+
+    function renderCompareTable() {
+      const table = document.getElementById('compareTable');
+      const activeBenchmarks = BENCHMARKS.filter(b => b.active);
+      const days = getCompareDays();
+
+      // Calculate stats for each benchmark
+      const stats = activeBenchmarks.map(b => {
+        const data = b._data || [];
+        const totalReturn = data.length > 0 ? data[data.length - 1] : 0;
+        const annualized = data.length > 252 ? totalReturn / (days / 365) : totalReturn * (365 / days);
+
+        // Volatility (std dev of daily returns)
+        const dailyReturns = [];
+        for (let i = 1; i < data.length; i++) {
+          dailyReturns.push(data[i] - data[i - 1]);
+        }
+        const mean = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+        const variance = dailyReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / dailyReturns.length;
+        const dailyVol = Math.sqrt(variance);
+        const annualVol = dailyVol * Math.sqrt(252);
+
+        // Max Drawdown
+        let peak = -Infinity;
+        let maxDD = 0;
+        data.forEach(v => {
+          if (v > peak) peak = v;
+          const dd = peak - v;
+          if (dd > maxDD) maxDD = dd;
+        });
+
+        // Sharpe (simplified, risk-free = 4%)
+        const riskFreeRate = 4;
+        const sharpe = annualVol > 0 ? (annualized - riskFreeRate) / annualVol : 0;
+
+        return {
+          id: b.id,
+          name: b.name,
+          color: b.color,
+          totalReturn,
+          annualized,
+          volatility: annualVol,
+          maxDrawdown: maxDD,
+          sharpe,
+        };
+      });
+
+      // Build table
+      const headerHtml = `
+        <tr>
+          <th style="text-align: left;">Kennzahl</th>
+          ${stats.map(s => `<th><div class="bench-label" style="justify-content: flex-end;"><span class="dot" style="background: ${s.color};"></span> ${s.name}</div></th>`).join('')}
+        </tr>
+      `;
+
+      const rows = [
+        { label: 'Gesamtrendite', key: 'totalReturn', fmt: (v) => `<span class="${v >= 0 ? 'positive' : 'negative'}">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>` },
+        { label: 'Annualisiert', key: 'annualized', fmt: (v) => `<span class="${v >= 0 ? 'positive' : 'negative'}">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>` },
+        { label: 'Volatilitaet (p.a.)', key: 'volatility', fmt: (v) => `${v.toFixed(2)}%` },
+        { label: 'Max. Drawdown', key: 'maxDrawdown', fmt: (v) => `<span class="negative">-${v.toFixed(2)}%</span>` },
+        { label: 'Sharpe Ratio', key: 'sharpe', fmt: (v) => v.toFixed(2) },
+      ];
+
+      const bodyHtml = rows.map((row, ri) => {
+        // Find best value for highlighting
+        let bestIdx = 0;
+        if (row.key === 'totalReturn' || row.key === 'annualized' || row.key === 'sharpe') {
+          stats.forEach((s, i) => { if (s[row.key] > stats[bestIdx][row.key]) bestIdx = i; });
+        } else if (row.key === 'volatility' || row.key === 'maxDrawdown') {
+          stats.forEach((s, i) => { if (s[row.key] < stats[bestIdx][row.key]) bestIdx = i; });
+        }
+
+        return `
+          <tr>
+            <td>${row.label}</td>
+            ${stats.map((s, i) => `<td style="${i === bestIdx ? 'color: var(--green); font-weight: 600;' : ''}">${row.fmt(s[row.key])}</td>`).join('')}
+          </tr>
+        `;
+      }).join('');
+
+      // Alpha row (portfolio vs MSCI World)
+      const portfolioStats = stats.find(s => s.id === 'portfolio');
+      const msciStats = stats.find(s => s.id === 'msci_world');
+      let alphaHtml = '';
+      if (portfolioStats && msciStats) {
+        const alpha = portfolioStats.totalReturn - msciStats.totalReturn;
+        alphaHtml = `
+          <tr class="highlight-row">
+            <td>Alpha vs. MSCI World</td>
+            ${stats.map(s => {
+              if (s.id === 'portfolio') {
+                return `<td><span class="${alpha >= 0 ? 'positive' : 'negative'}">${alpha >= 0 ? '+' : ''}${alpha.toFixed(2)}%</span></td>`;
+              }
+              return '<td>-</td>';
+            }).join('')}
+          </tr>
+        `;
+      }
+
+      table.querySelector('thead').innerHTML = headerHtml;
+      table.querySelector('tbody').innerHTML = bodyHtml + alphaHtml;
+    }
+
+    function renderAlphaChart() {
+      const ctx = document.getElementById('alphaChart').getContext('2d');
+      if (alphaChartInstance) alphaChartInstance.destroy();
+
+      const days = getCompareDays();
+      const portfolioData = generatePortfolioReturns(days);
+      const msciData = generateBenchmarkData(0.095, days);
+
+      const labels = [];
+      const alphaData = [];
+      const now = new Date();
+
+      for (let i = 0; i <= days; i++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - (days - i));
+        labels.push(d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
+        alphaData.push(portfolioData[i] - msciData[i]);
+      }
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+      gradient.addColorStop(0, 'rgba(99, 102, 241, 0.25)');
+      gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.0)');
+      gradient.addColorStop(1, 'rgba(239, 68, 68, 0.15)');
+
+      alphaChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Alpha',
+            data: alphaData,
+            borderColor: alphaData[alphaData.length - 1] >= 0 ? '#6366f1' : '#ef4444',
+            borderWidth: 2,
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              callbacks: {
+                label: (ctx) => `Alpha: ${ctx.raw >= 0 ? '+' : ''}${ctx.raw.toFixed(2)}%`,
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: { color: '#71717a', font: { size: 10 }, maxTicksLimit: 8 },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                callback: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%',
+              },
+              border: { display: false }
+            }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      });
+    }
+
+    function renderDrawdownChart() {
+      const ctx = document.getElementById('drawdownChart').getContext('2d');
+      if (drawdownChartInstance) drawdownChartInstance.destroy();
+
+      const days = getCompareDays();
+      const labels = [];
+      const now = new Date();
+
+      for (let i = days; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        labels.push(d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
+      }
+
+      const calcDrawdown = (data) => {
+        const dd = [];
+        let peak = -Infinity;
+        data.forEach(v => {
+          if (v > peak) peak = v;
+          dd.push(v - peak);
+        });
+        return dd;
+      };
+
+      const pData = generatePortfolioReturns(days);
+      const mData = generateBenchmarkData(0.095, days);
+      const sData = generateBenchmarkData(0.105, days);
+
+      const datasets = [
+        { label: 'Mein Portfolio', data: calcDrawdown(pData), borderColor: '#6366f1', borderWidth: 2, backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.3, pointRadius: 0 },
+        { label: 'MSCI World', data: calcDrawdown(mData), borderColor: '#22c55e', borderWidth: 1.5, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0 },
+        { label: 'S&P 500', data: calcDrawdown(sData), borderColor: '#3b82f6', borderWidth: 1.5, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0 },
+      ];
+
+      drawdownChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#a1a1aa',
+                font: { size: 10 },
+                boxWidth: 12,
+                boxHeight: 2,
+                padding: 12,
+              }
+            },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%`,
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: { color: '#71717a', font: { size: 10 }, maxTicksLimit: 8 },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                callback: (v) => v.toFixed(1) + '%',
+              },
+              border: { display: false }
+            }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      });
+    }
+
+    async function renderCompareTab() {
+      renderBenchmarkToggles();
+      // Try to fetch live index data
+      await fetchLiveIndices(compareperiod);
+      renderCompareChart();
+      renderCompareTable();
+      renderAlphaChart();
+      renderDrawdownChart();
+    }
+
+    // Compare period buttons
+    document.querySelectorAll('.compare-period-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.compare-period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        compareperiod = btn.dataset.cperiod;
+        renderCompareTab();
+      });
+    });
+
+    // ==========================================
+    // TABS
+    // ==========================================
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+
+        // Re-render charts when switching tabs (canvas resize issue)
+        if (btn.dataset.tab === 'overview') {
+          renderCharts();
+        }
+        if (btn.dataset.tab === 'performance') {
+          renderPerformanceTab();
+        }
+        if (btn.dataset.tab === 'compare') {
+          renderCompareTab();
+        }
+      });
+    });
+
+    // Period buttons
+    document.querySelectorAll('.period-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderPerformanceChart();
+      });
+    });
+
+    // ==========================================
+    // CSV IMPORT
+    // ==========================================
+
+    function openCsvModal() {
+      document.getElementById('csvModal').classList.add('active');
+    }
+
+    function closeCsvModal() {
+      document.getElementById('csvModal').classList.remove('active');
+      pendingCsvData = null;
+      document.getElementById('importBtn').disabled = true;
+    }
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('csvFileInput');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.csv')) handleFile(file);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        pendingCsvData = parseCSV(text);
+        if (pendingCsvData && pendingCsvData.length > 0) {
+          document.getElementById('importBtn').disabled = false;
+          dropZone.querySelector('.drop-zone-text').textContent = `${file.name} (${pendingCsvData.length} Positionen)`;
+          showToast(`${pendingCsvData.length} Positionen erkannt`);
+        } else {
+          showToast('CSV konnte nicht gelesen werden', 'error');
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split('\n');
+      if (lines.length < 2) return null;
+
+      // Detect delimiter
+      const delimiters = [';', ',', '\t'];
+      let delimiter = ';';
+      let maxCount = 0;
+      for (const d of delimiters) {
+        const count = (lines[0].match(new RegExp('\\' + d, 'g')) || []).length;
+        if (count > maxCount) { maxCount = count; delimiter = d; }
+      }
+
+      const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase().replace(/['"]/g, ''));
+
+      // Map header names
+      const headerMap = {};
+      headers.forEach((h, i) => {
+        if (['name', 'bezeichnung', 'wertpapier', 'titel'].includes(h)) headerMap.name = i;
+        if (['ticker', 'symbol', 'isin', 'wkn', 'kuerzel'].includes(h)) headerMap.ticker = i;
+        if (['stueck', 'stück', 'anzahl', 'shares', 'menge', 'quantity'].includes(h)) headerMap.shares = i;
+        if (['kaufkurs', 'einstandskurs', 'buy price', 'kaufpreis', 'einstieg', 'avg price', 'durchschnittskurs'].includes(h)) headerMap.buyPrice = i;
+        if (['kurs', 'aktueller kurs', 'current price', 'preis', 'price', 'letzter kurs'].includes(h)) headerMap.currentPrice = i;
+        if (['sektor', 'sector', 'branche', 'kategorie', 'category'].includes(h)) headerMap.sector = i;
+      });
+
+      const result = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(delimiter).map(c => c.trim().replace(/['"]/g, ''));
+        if (cols.length < 3) continue;
+
+        const name = cols[headerMap.name] || cols[0] || 'Unbekannt';
+        const ticker = cols[headerMap.ticker] || cols[1] || '???';
+        const shares = parseFloat((cols[headerMap.shares] || cols[2] || '0').replace(',', '.'));
+        const buyPrice = parseFloat((cols[headerMap.buyPrice] || cols[3] || '0').replace(',', '.'));
+        const currentPrice = parseFloat((cols[headerMap.currentPrice] || cols[4] || cols[3] || '0').replace(',', '.'));
+        const sector = cols[headerMap.sector] || cols[5] || 'Sonstige';
+
+        if (shares > 0 && (buyPrice > 0 || currentPrice > 0)) {
+          result.push({
+            name,
+            ticker,
+            shares,
+            buyPrice: buyPrice || currentPrice,
+            currentPrice: currentPrice || buyPrice,
+            sector,
+            dayChange: (Math.random() * 4 - 1.5)
+          });
+        }
+      }
+      return result;
+    }
+
+    function processImport() {
+      if (!pendingCsvData) return;
+      portfolioData = pendingCsvData;
+      pendingCsvData = null;
+      // Save to localStorage
+      localStorage.setItem('portfolioData', JSON.stringify(portfolioData));
+      closeCsvModal();
+      // Try fetching live prices for the imported data
+      refreshLiveData();
+      showToast(`${portfolioData.length} Positionen importiert -- lade Live-Kurse...`);
+    }
+
+    // ==========================================
+    // EXPORT
+    // ==========================================
+
+    function exportData() {
+      const stats = calcPortfolio();
+      const headers = ['Name', 'Ticker', 'Stueck', 'Kaufkurs', 'Aktueller Kurs', 'Wert', 'G/V', 'G/V %', 'Gewicht %', 'Sektor'];
+      const rows = portfolioData.map(h => [
+        h.name, h.ticker, h.shares, h.buyPrice.toFixed(2), h.currentPrice.toFixed(2),
+        h._value.toFixed(2), h._gain.toFixed(2), h._gainPct.toFixed(2), h._weight.toFixed(2), h.sector
+      ]);
+
+      const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `portfolio_export_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      showToast('Portfolio exportiert');
+    }
+
+    // ==========================================
+    // INIT
+    // ==========================================
+
+    // Load saved portfolio from localStorage
+    const savedPortfolio = localStorage.getItem('portfolioData');
+    if (savedPortfolio) {
+      try {
+        const parsed = JSON.parse(savedPortfolio);
+        if (Array.isArray(parsed) && parsed.length > 0) portfolioData = parsed;
+      } catch (e) {}
+    }
+
+    // Render with local data first, then try live
+    renderDashboard();
+    refreshLiveData();
+    startAutoRefresh();
+  </script>
+</body>
+</html>

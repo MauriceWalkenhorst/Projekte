@@ -1129,7 +1129,7 @@
             <span class="change-abs" id="changeAbs">--</span>
           </div>
         </div>
-        <div class="portfolio-sub">Gesamtportfolio &middot; Letzte Aktualisierung: <span id="lastUpdate">--</span></div>
+        <div class="portfolio-sub">Gesamtportfolio &middot; <span id="portfolioAge">--</span> &middot; Letzte Aktualisierung: <span id="lastUpdate">--</span></div>
       </div>
 
       <!-- KPI Row -->
@@ -1159,6 +1159,7 @@
       <!-- Tabs -->
       <div class="tabs">
         <button class="tab-btn active" data-tab="overview">Uebersicht</button>
+        <button class="tab-btn" data-tab="daily">Tagesentwicklung</button>
         <button class="tab-btn" data-tab="holdings">Positionen</button>
         <button class="tab-btn" data-tab="performance">Performance</button>
         <button class="tab-btn" data-tab="compare">Vergleich</button>
@@ -1171,12 +1172,8 @@
           <div class="panel">
             <div class="panel-header">
               <span class="panel-title">Portfolio Entwicklung</span>
-              <div class="panel-actions">
-                <button class="period-btn" data-period="1W">1W</button>
-                <button class="period-btn" data-period="1M">1M</button>
-                <button class="period-btn active" data-period="3M">3M</button>
-                <button class="period-btn" data-period="1J">1J</button>
-                <button class="period-btn" data-period="MAX">MAX</button>
+              <div class="panel-actions" id="periodButtons">
+                <!-- Dynamisch basierend auf Portfolio-Alter -->
               </div>
             </div>
             <div class="chart-container">
@@ -1200,6 +1197,40 @@
             <span class="panel-title">Top Beweger heute</span>
           </div>
           <div class="movers-grid" id="moversGrid"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Tagesentwicklung -->
+      <div class="tab-content" id="tab-daily">
+        <div class="chart-grid" style="grid-template-columns: 1fr;">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Tagesperformance nach Position</span>
+            </div>
+            <div class="chart-container" style="height: 300px;">
+              <canvas id="dailyBarChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top: 1rem;">
+          <div class="panel-header">
+            <span class="panel-title">Tagesuebersicht</span>
+            <span class="kpi-sub" id="dailySummary">--</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left;">Position</th>
+                  <th class="text-right">Kurs</th>
+                  <th class="text-right">Tages +/-</th>
+                  <th class="text-right">Tages +/- %</th>
+                  <th class="text-right">Tages G/V</th>
+                </tr>
+              </thead>
+              <tbody id="dailyBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1266,13 +1297,8 @@
         <div class="panel" style="margin-bottom: 1rem;">
           <div class="panel-header">
             <span class="panel-title">Portfolio vs. Welt-Indizes</span>
-            <div class="panel-actions">
-              <button class="compare-period-btn" data-cperiod="1M">1M</button>
-              <button class="compare-period-btn" data-cperiod="3M">3M</button>
-              <button class="compare-period-btn active" data-cperiod="6M">6M</button>
-              <button class="compare-period-btn" data-cperiod="1J">1J</button>
-              <button class="compare-period-btn" data-cperiod="3J">3J</button>
-              <button class="compare-period-btn" data-cperiod="MAX">MAX</button>
+            <div class="panel-actions" id="comparePeriodButtons">
+              <!-- Dynamisch basierend auf Portfolio-Alter -->
             </div>
           </div>
           <div class="benchmark-toggles" id="benchmarkToggles"></div>
@@ -1359,6 +1385,14 @@
     };
 
     const sectorColors = {};
+
+    // Portfolio-Startdatum (Wann du angefangen hast zu investieren)
+    const PORTFOLIO_START_DATE = new Date('2026-02-10');
+
+    function getPortfolioAgeDays() {
+      const now = new Date();
+      return Math.max(1, Math.floor((now - PORTFOLIO_START_DATE) / (1000 * 60 * 60 * 24)));
+    }
 
     // Dein Portfolio (Stand: 20.02.2026)
     let portfolioData = [
@@ -1654,6 +1688,10 @@
         weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
       });
 
+      // Portfolio-Alter
+      const ageDays = getPortfolioAgeDays();
+      document.getElementById('portfolioAge').textContent = `Tag ${ageDays} seit Start (${PORTFOLIO_START_DATE.toLocaleDateString('de-DE')})`;
+
       // Total value
       document.getElementById('totalValue').textContent = formatCurrency(stats.totalValue);
 
@@ -1681,18 +1719,77 @@
       // Anzahl Positionen
       document.getElementById('kpiDividends').textContent = portfolioData.length;
 
+      renderPeriodButtons();
       renderCharts();
       renderHoldings();
       renderMovers();
       renderNews();
       renderPerformanceTab();
+      renderDailyTab();
     }
 
     // ==========================================
     // CHARTS
     // ==========================================
 
-    let perfChart, allocChart, cumChart, monthChart, sectorPerfChartInstance, compareChartInstance, alphaChartInstance, drawdownChartInstance;
+    let perfChart, allocChart, cumChart, monthChart, sectorPerfChartInstance, compareChartInstance, alphaChartInstance, drawdownChartInstance, dailyBarChartInstance;
+
+    // Dynamische Perioden-Buttons basierend auf Portfolio-Alter
+    function renderPeriodButtons() {
+      const ageDays = getPortfolioAgeDays();
+      const allPeriods = [
+        { label: '1W', days: 7 },
+        { label: '1M', days: 30 },
+        { label: '3M', days: 90 },
+        { label: '6M', days: 180 },
+        { label: '1J', days: 365 },
+        { label: 'MAX', days: 9999 },
+      ];
+
+      // Nur Perioden zeigen die sinnvoll sind (Portfolio muss mind. 50% der Periode alt sein, oder MAX)
+      const available = allPeriods.filter(p => p.label === 'MAX' || ageDays >= Math.floor(p.days * 0.5));
+      // Default: die groesste verfuegbare Periode (oder MAX)
+      const defaultPeriod = available.length > 1 ? available[available.length - 2].label : 'MAX';
+
+      const container = document.getElementById('periodButtons');
+      container.innerHTML = available.map(p =>
+        `<button class="period-btn ${p.label === defaultPeriod ? 'active' : ''}" data-period="${p.label}">${p.label}</button>`
+      ).join('');
+
+      container.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderPerformanceChart();
+        });
+      });
+
+      // Vergleichs-Perioden auch dynamisch
+      const compareContainer = document.getElementById('comparePeriodButtons');
+      const defaultComparePeriod = available.length > 1 ? available[available.length - 2].label : 'MAX';
+      compareperiod = defaultComparePeriod;
+
+      compareContainer.innerHTML = available.map(p =>
+        `<button class="compare-period-btn ${p.label === defaultComparePeriod ? 'active' : ''}" data-cperiod="${p.label}">${p.label}</button>`
+      ).join('');
+
+      compareContainer.querySelectorAll('.compare-period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          compareContainer.querySelectorAll('.compare-period-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          compareperiod = btn.dataset.cperiod;
+          renderCompareTab();
+        });
+      });
+    }
+
+    function getActivePeriodDays() {
+      const activeBtn = document.querySelector('#periodButtons .period-btn.active');
+      const period = activeBtn ? activeBtn.dataset.period : 'MAX';
+      const ageDays = getPortfolioAgeDays();
+      const map = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1J': 365, 'MAX': ageDays };
+      return Math.min(map[period] || ageDays, ageDays);
+    }
 
     function renderCharts() {
       renderPerformanceChart();
@@ -1703,23 +1800,30 @@
       const ctx = document.getElementById('performanceChart').getContext('2d');
       if (perfChart) perfChart.destroy();
 
-      // Generate demo performance data
-      const labels = [];
-      const data = [];
       const stats = calcPortfolio();
       const baseValue = stats.totalInvested;
-      let val = baseValue;
-      const now = new Date();
+      const days = getActivePeriodDays();
 
-      for (let i = 90; i >= 0; i--) {
+      // Realistische Simulation: von Invested bis Current Value ueber die tatsaechlichen Tage
+      const labels = [];
+      const data = [];
+      const now = new Date();
+      const totalReturn = stats.totalValue - baseValue;
+
+      for (let i = days; i >= 0; i--) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
+        // Nicht vor dem Start-Datum zeigen
+        if (d < PORTFOLIO_START_DATE) continue;
         labels.push(d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
-        val += val * (Math.random() * 0.03 - 0.012);
+        // Lineare Interpolation + leichtes Rauschen
+        const progress = (days - i) / days;
+        const noise = (days - i === days) ? 0 : (Math.random() - 0.5) * baseValue * 0.003;
+        const val = baseValue + totalReturn * progress + noise;
         data.push(val);
       }
-      // Last point = actual value
-      data[data.length - 1] = stats.totalValue;
+      // Letzter Punkt = exakter aktueller Wert
+      if (data.length > 0) data[data.length - 1] = stats.totalValue;
 
       const gradient = ctx.createLinearGradient(0, 0, 0, 280);
       gradient.addColorStop(0, COLORS.gradientTop);
@@ -2037,30 +2141,33 @@
     // ==========================================
 
     function renderPerformanceTab() {
-      // Cumulative return chart
+      // Cumulative return chart - nur seit Portfolio-Start
       const ctx1 = document.getElementById('cumulativeChart').getContext('2d');
       if (cumChart) cumChart.destroy();
 
       const labels = [];
       const data = [];
-      let cumReturn = 0;
+      const stats = calcPortfolio();
+      const ageDays = getPortfolioAgeDays();
       const now = new Date();
+      const totalReturnPct = stats.totalGainPct;
 
-      for (let i = 365; i >= 0; i--) {
+      for (let i = ageDays; i >= 0; i--) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
-        if (d.getDate() === 1 || i === 365 || i === 0) {
-          labels.push(d.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' }));
-        } else {
-          labels.push('');
-        }
-        cumReturn += (Math.random() * 1.2 - 0.45);
-        data.push(cumReturn);
+        if (d < PORTFOLIO_START_DATE) continue;
+        labels.push(d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
+        const progress = (ageDays - i) / ageDays;
+        const noise = (i === 0) ? 0 : (Math.random() - 0.5) * 0.3;
+        data.push(totalReturnPct * progress + noise);
       }
+      // Letzter Punkt = echte kumulative Rendite
+      if (data.length > 0) data[data.length - 1] = totalReturnPct;
 
       const gradient1 = ctx1.createLinearGradient(0, 0, 0, 280);
-      gradient1.addColorStop(0, 'rgba(34, 197, 94, 0.2)');
-      gradient1.addColorStop(1, 'rgba(34, 197, 94, 0.0)');
+      const isPositiveReturn = totalReturnPct >= 0;
+      gradient1.addColorStop(0, isPositiveReturn ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)');
+      gradient1.addColorStop(1, isPositiveReturn ? 'rgba(34, 197, 94, 0.0)' : 'rgba(239, 68, 68, 0.0)');
 
       cumChart = new Chart(ctx1, {
         type: 'line',
@@ -2068,7 +2175,7 @@
           labels,
           datasets: [{
             data,
-            borderColor: '#22c55e',
+            borderColor: isPositiveReturn ? '#22c55e' : '#ef4444',
             borderWidth: 2,
             backgroundColor: gradient1,
             fill: true,
@@ -2107,12 +2214,33 @@
         }
       });
 
-      // Monthly return chart
+      // Monthly return chart - nur Monate seit Portfolio-Start
       const ctx2 = document.getElementById('monthlyChart').getContext('2d');
       if (monthChart) monthChart.destroy();
 
-      const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-      const monthlyData = months.map(() => (Math.random() * 10 - 3));
+      const allMonths = ['Jan', 'Feb', 'Maer', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+      const startMonth = PORTFOLIO_START_DATE.getMonth(); // 0-indexed (Jan=0, Feb=1)
+      const startYear = PORTFOLIO_START_DATE.getFullYear();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      // Berechne welche Monate existieren
+      const months = [];
+      const monthlyData = [];
+      let tempDate = new Date(startYear, startMonth, 1);
+      while (tempDate <= now) {
+        const mIdx = tempDate.getMonth();
+        const yIdx = tempDate.getFullYear();
+        const label = allMonths[mIdx] + (yIdx !== currentYear ? ' ' + (yIdx % 100) : '');
+        months.push(label);
+        // Fuer den aktuellen Monat: echte Gesamt-Performance, fuer vergangene Monate simuliert
+        if (mIdx === currentMonth && yIdx === currentYear) {
+          monthlyData.push(totalReturnPct);
+        } else {
+          monthlyData.push((Math.random() * 4 - 1));
+        }
+        tempDate.setMonth(tempDate.getMonth() + 1);
+      }
 
       monthChart = new Chart(ctx2, {
         type: 'bar',
@@ -2227,15 +2355,9 @@
     let compareperiod = '6M';
 
     function getCompareDays() {
-      switch (compareperiod) {
-        case '1M': return 30;
-        case '3M': return 90;
-        case '6M': return 180;
-        case '1J': return 365;
-        case '3J': return 1095;
-        case 'MAX': return 1825;
-        default: return 180;
-      }
+      const ageDays = getPortfolioAgeDays();
+      const map = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1J': 365, '3J': 1095, 'MAX': ageDays };
+      return Math.min(map[compareperiod] || ageDays, ageDays);
     }
 
     function generateBenchmarkData(annualReturn, days, volatility = 0.012) {
@@ -2252,15 +2374,16 @@
     function generatePortfolioReturns(days) {
       const stats = calcPortfolio();
       const totalReturnPct = stats.totalGainPct;
-      const dailyAvg = totalReturnPct / 365;
+      const ageDays = getPortfolioAgeDays();
+      // Rendite pro Tag basierend auf tatsaechlichem Alter
+      const dailyAvg = totalReturnPct / ageDays;
       const data = [0];
       for (let i = 1; i <= days; i++) {
-        const noise = (Math.random() - 0.5) * 0.015 * 2;
-        data.push(data[i - 1] + dailyAvg + noise * 100);
+        const noise = (Math.random() - 0.5) * 0.4;
+        data.push(data[i - 1] + dailyAvg + noise);
       }
-      // Ensure last point matches actual portfolio return (scaled to period)
-      const scale = days / 365;
-      const target = totalReturnPct * scale;
+      // Letzter Punkt = echte Portfolio-Rendite
+      const target = totalReturnPct;
       const current = data[data.length - 1];
       const adjust = target - current;
       for (let i = 1; i < data.length; i++) {
@@ -2490,7 +2613,7 @@
       if (alphaChartInstance) alphaChartInstance.destroy();
 
       const days = getCompareDays();
-      const portfolioData = generatePortfolioReturns(days);
+      const portfolioReturns = generatePortfolioReturns(days);
       const msciData = generateBenchmarkData(0.095, days);
 
       const labels = [];
@@ -2501,7 +2624,7 @@
         const d = new Date(now);
         d.setDate(d.getDate() - (days - i));
         labels.push(d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
-        alphaData.push(portfolioData[i] - msciData[i]);
+        alphaData.push(portfolioReturns[i] - msciData[i]);
       }
 
       const gradient = ctx.createLinearGradient(0, 0, 0, 280);
@@ -2656,15 +2779,7 @@
       renderDrawdownChart();
     }
 
-    // Compare period buttons
-    document.querySelectorAll('.compare-period-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.compare-period-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        compareperiod = btn.dataset.cperiod;
-        renderCompareTab();
-      });
-    });
+    // Compare period buttons sind jetzt dynamisch in renderPeriodButtons()
 
     // ==========================================
     // TABS
@@ -2681,6 +2796,9 @@
         if (btn.dataset.tab === 'overview') {
           renderCharts();
         }
+        if (btn.dataset.tab === 'daily') {
+          renderDailyTab();
+        }
         if (btn.dataset.tab === 'performance') {
           renderPerformanceTab();
         }
@@ -2690,14 +2808,113 @@
       });
     });
 
-    // Period buttons
-    document.querySelectorAll('.period-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderPerformanceChart();
+    // Period buttons sind jetzt dynamisch in renderPeriodButtons()
+
+    // ==========================================
+    // TAGESENTWICKLUNG TAB
+    // ==========================================
+
+    function renderDailyTab() {
+      const stats = calcPortfolio();
+
+      // Tabelle
+      const body = document.getElementById('dailyBody');
+      const sorted = [...portfolioData].sort((a, b) => Math.abs(b._dayChangeAbs) - Math.abs(a._dayChangeAbs));
+
+      let totalDayAbs = 0;
+      body.innerHTML = sorted.map(h => {
+        const dayAbs = h._dayChangeAbs;
+        totalDayAbs += dayAbs;
+        const prevPrice = h.currentPrice / (1 + h.dayChange / 100);
+        const priceChange = h.currentPrice - prevPrice;
+        const isPos = h.dayChange >= 0;
+        return `
+          <tr>
+            <td>
+              <div class="asset-cell">
+                <div class="asset-icon" style="background: ${sectorColors[h.sector] || '#6366f1'}20; color: ${sectorColors[h.sector] || '#6366f1'}; border: 1px solid ${sectorColors[h.sector] || '#6366f1'}30;">
+                  ${h.ticker.slice(0, 3)}
+                </div>
+                <div class="asset-info">
+                  <span class="asset-name">${h.name}</span>
+                  <span class="asset-ticker">${h.ticker}</span>
+                </div>
+              </div>
+            </td>
+            <td class="text-right mono">${formatCurrency(h.currentPrice)}</td>
+            <td class="text-right mono ${isPos ? 'positive' : 'negative'}">${(isPos ? '+' : '') + formatCurrency(priceChange)}</td>
+            <td class="text-right mono ${isPos ? 'positive' : 'negative'}">${formatPct(h.dayChange)}</td>
+            <td class="text-right mono ${isPos ? 'positive' : 'negative'}" style="font-weight: 600;">${(isPos ? '+' : '') + formatCurrency(dayAbs)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // Summary
+      const summaryEl = document.getElementById('dailySummary');
+      const isPos = stats.totalDayChange >= 0;
+      summaryEl.innerHTML = `Tagesgesamt: <span class="${isPos ? 'positive' : 'negative'}" style="font-weight: 600;">${(isPos ? '+' : '') + formatCurrency(stats.totalDayChange)} (${formatPct(stats.totalDayChangePct)})</span>`;
+
+      // Bar Chart
+      const ctx = document.getElementById('dailyBarChart').getContext('2d');
+      if (dailyBarChartInstance) dailyBarChartInstance.destroy();
+
+      const chartData = sorted.map(h => ({
+        label: h.ticker,
+        value: h._dayChangeAbs,
+        pct: h.dayChange,
+      }));
+
+      dailyBarChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartData.map(d => d.label),
+          datasets: [{
+            label: 'Tages G/V',
+            data: chartData.map(d => d.value),
+            backgroundColor: chartData.map(d => d.value >= 0 ? 'rgba(34, 197, 94, 0.6)' : 'rgba(239, 68, 68, 0.6)'),
+            borderColor: chartData.map(d => d.value >= 0 ? '#22c55e' : '#ef4444'),
+            borderWidth: 1,
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#a1a1aa',
+              bodyColor: '#fafafa',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              callbacks: {
+                label: (ctx) => {
+                  const d = chartData[ctx.dataIndex];
+                  return `${(d.value >= 0 ? '+' : '')}${formatCurrency(d.value)} (${formatPct(d.pct)})`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#a1a1aa', font: { size: 11, weight: 600 } },
+              border: { display: false }
+            },
+            y: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)', drawBorder: false },
+              ticks: {
+                color: '#71717a',
+                font: { size: 10 },
+                callback: (v) => (v >= 0 ? '+' : '') + formatCurrency(v),
+              },
+              border: { display: false }
+            }
+          }
+        }
       });
-    });
+    }
 
     // ==========================================
     // CSV IMPORT

@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Betriebsrat-Spielecke</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0d0d0f;
+      --bg-card: #1e1e22;
+      --bg-tertiary: #1c1c1f;
+      --border: #2a2a2e;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --purple: #a855f7;
+      --pink: #ec4899;
+      --cyan: #06b6d4;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .bg-gradient {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(168, 85, 247, 0.1), transparent),
+        radial-gradient(ellipse 50% 30% at 0% 100%, rgba(6, 182, 212, 0.1), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+
+    header { text-align: center; margin-bottom: 28px; }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--accent-hover), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    header p { color: var(--text-secondary); font-size: 0.95rem; }
+
+    nav.tabs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 10px 20px;
+      border-radius: 999px;
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--text-primary); border-color: var(--accent); }
+    .tab-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 18px rgba(99, 102, 241, 0.4);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 { font-size: 1.1rem; margin-bottom: 4px; }
+    .card .hint { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button.primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); }
+    button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    button.ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button.ghost:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+    /* ── Glücksrad ── */
+    .wheel-layout { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; justify-content: center; }
+    .wheel-stage { position: relative; width: 340px; height: 340px; flex-shrink: 0; }
+    #wheel { width: 100%; height: 100%; }
+    .wheel-pointer {
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 24px solid var(--pink);
+      filter: drop-shadow(0 2px 6px rgba(236, 72, 153, 0.6));
+      z-index: 2;
+    }
+    .wheel-side { flex: 1; min-width: 260px; }
+    .name-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .name-row input {
+      flex: 1;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 0.9rem;
+    }
+    .name-row input:focus { outline: none; border-color: var(--accent); }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 8px 6px 14px;
+      font-size: 0.85rem;
+    }
+    .chip .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .chip button {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 1rem; line-height: 1; padding: 2px 6px;
+    }
+    .chip button:hover { color: var(--error); }
+    .wheel-result {
+      text-align: center;
+      margin-top: 16px;
+      min-height: 64px;
+    }
+    .wheel-result .winner {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--success);
+    }
+    .wheel-result .task { color: var(--text-secondary); font-size: 0.9rem; }
+    select#taskSelect {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 0.9rem;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    /* ── Abstimmung ── */
+    .vote-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 560px) { .vote-grid { grid-template-columns: 1fr; } }
+    .vote-card {
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .vote-card:hover { transform: translateY(-2px); }
+    .vote-card .count { font-size: 2.4rem; font-weight: 800; }
+    .vote-card .label { font-weight: 600; font-size: 0.95rem; }
+    .vote-card .sub { color: var(--text-muted); font-size: 0.75rem; }
+    .vote-card.ja .count { color: var(--success); }
+    .vote-card.nein .count { color: var(--error); }
+    .vote-card.enthaltung .count { color: var(--warning); }
+    .vote-bar {
+      display: flex;
+      height: 18px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .vote-bar div { transition: width 0.4s ease; }
+    .vote-bar .b-ja { background: var(--success); }
+    .vote-bar .b-nein { background: var(--error); }
+    .vote-bar .b-ent { background: var(--warning); }
+    .vote-verdict { text-align: center; font-weight: 700; min-height: 28px; margin-bottom: 12px; }
+    #voteTopic {
+      width: 100%;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      padding: 10px 14px;
+      font: inherit;
+      margin-bottom: 16px;
+    }
+    #voteTopic:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Timer ── */
+    .timer-display {
+      text-align: center;
+      font-size: 4.5rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      margin: 12px 0 20px;
+      letter-spacing: 2px;
+    }
+    .timer-display.warning { color: var(--warning); }
+    .timer-display.over { color: var(--error); animation: pulse 1s infinite; }
+    @keyframes pulse { 50% { opacity: 0.4; } }
+    .timer-presets { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+    .timer-controls { display: flex; gap: 12px; justify-content: center; }
+
+    footer { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 40px; }
+
+    /* Konfetti */
+    .confetti {
+      position: fixed;
+      top: -12px;
+      z-index: 999;
+      pointer-events: none;
+      border-radius: 2px;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      to { transform: translateY(105vh) rotate(720deg); opacity: 0.8; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="container">
+    <header>
+      <h1>🏛️ Betriebsrat-Spielecke</h1>
+      <p>Kleine Helferlein für große Mitbestimmung</p>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="wheel">🎡 Glücksrad</button>
+      <button class="tab-btn" data-tab="vote">🗳️ Abstimmung</button>
+      <button class="tab-btn" data-tab="timer">⏱️ Pausen-Timer</button>
+    </nav>
+
+    <!-- Glücksrad -->
+    <section class="panel active" id="panel-wheel">
+      <div class="card">
+        <h2>Wer ist heute dran?</h2>
+        <p class="hint">Namen eintragen, Aufgabe wählen, Rad drehen – das Los entscheidet, ganz demokratisch.</p>
+        <div class="wheel-layout">
+          <div class="wheel-stage">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheel" width="680" height="680"></canvas>
+          </div>
+          <div class="wheel-side">
+            <select id="taskSelect">
+              <option>📝 Protokoll schreiben</option>
+              <option>☕ Kaffee holen</option>
+              <option>🥨 Brezeln für die Sitzung besorgen</option>
+              <option>📋 Tagesordnung vorbereiten</option>
+              <option>🎂 Geburtstagskasse verwalten</option>
+              <option>🧹 Sitzungsraum aufräumen</option>
+            </select>
+            <div class="name-row">
+              <input id="nameInput" type="text" placeholder="Name hinzufügen…" maxlength="30">
+              <button class="ghost" id="addName">+ Hinzufügen</button>
+            </div>
+            <div class="chips" id="nameChips"></div>
+            <div style="text-align:center">
+              <button class="primary" id="spinBtn">🎡 Rad drehen!</button>
+            </div>
+            <div class="wheel-result" id="wheelResult"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Abstimmung -->
+    <section class="panel" id="panel-vote">
+      <div class="card">
+        <h2>Schnelle Handzeichen-Auszählung</h2>
+        <p class="hint">Thema eintippen, pro Stimme einmal klicken – das Ergebnis kommt sofort. (Ersetzt natürlich keine formelle Beschlussfassung 😉)</p>
+        <input id="voteTopic" type="text" placeholder="Worüber wird abgestimmt? z. B. „Kickertisch für den Pausenraum“">
+        <div class="vote-grid">
+          <div class="vote-card ja" id="voteJa">
+            <div class="count">0</div>
+            <div class="label">✅ Dafür</div>
+            <div class="sub">Klick = +1 · Rechtsklick = −1</div>
+          </div>
+          <div class="vote-card nein" id="voteNein">
+            <div class="count">0</div>
+            <div class="label">❌ Dagegen</div>
+            <div class="sub">Klick = +1 · Rechtsklick = −1</div>
+          </div>
+          <div class="vote-card enthaltung" id="voteEnt">
+            <div class="count">0</div>
+            <div class="label">🤷 Enthaltung</div>
+            <div class="sub">Klick = +1 · Rechtsklick = −1</div>
+          </div>
+        </div>
+        <div class="vote-bar" id="voteBar">
+          <div class="b-ja" style="width:0%"></div>
+          <div class="b-ent" style="width:0%"></div>
+          <div class="b-nein" style="width:0%"></div>
+        </div>
+        <div class="vote-verdict" id="voteVerdict"></div>
+        <div style="text-align:center">
+          <button class="ghost" id="voteReset">↺ Zurücksetzen</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Timer -->
+    <section class="panel" id="panel-timer">
+      <div class="card">
+        <h2>Pausen- &amp; Redezeit-Timer</h2>
+        <p class="hint">Damit die Kaffeepause nicht zur Kaffeefahrt wird.</p>
+        <div class="timer-display" id="timerDisplay">05:00</div>
+        <div class="timer-presets">
+          <button class="ghost" data-min="1">1 Min (Redezeit)</button>
+          <button class="ghost" data-min="5">5 Min</button>
+          <button class="ghost" data-min="10">10 Min</button>
+          <button class="ghost" data-min="15">15 Min (Pause)</button>
+        </div>
+        <div class="timer-controls">
+          <button class="primary" id="timerStart">▶ Start</button>
+          <button class="ghost" id="timerReset">↺ Zurücksetzen</button>
+        </div>
+      </div>
+    </section>
+
+    <footer>Mit ❤️ für den Betriebsrat · läuft komplett lokal im Browser, keine Daten verlassen das Gerät</footer>
+  </div>
+
+  <script>
+    // ── Tabs ──
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ── Glücksrad ──
+    const COLORS = ['#6366f1', '#ec4899', '#06b6d4', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6'];
+    let names = JSON.parse(localStorage.getItem('br_names') || 'null') || ['Anna', 'Ben', 'Carla', 'David'];
+    let angle = 0;
+    let spinning = false;
+
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
+    const chipsEl = document.getElementById('nameChips');
+    const resultEl = document.getElementById('wheelResult');
+
+    function saveNames() { localStorage.setItem('br_names', JSON.stringify(names)); }
+
+    function drawWheel() {
+      const cx = canvas.width / 2, cy = canvas.height / 2, r = cx - 10;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (names.length === 0) {
+        ctx.fillStyle = '#71717a';
+        ctx.font = '28px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Namen hinzufügen…', cx, cy);
+        return;
+      }
+      const slice = (2 * Math.PI) / names.length;
+      names.forEach((name, i) => {
+        const start = angle + i * slice;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, start, start + slice);
+        ctx.closePath();
+        ctx.fillStyle = COLORS[i % COLORS.length];
+        ctx.fill();
+        ctx.strokeStyle = '#0d0d0f';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        // Beschriftung
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(start + slice / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#fff';
+        ctx.font = '700 26px Inter, sans-serif';
+        ctx.fillText(name.length > 12 ? name.slice(0, 11) + '…' : name, r - 24, 9);
+        ctx.restore();
+      });
+      // Nabe
+      ctx.beginPath();
+      ctx.arc(cx, cy, 36, 0, 2 * Math.PI);
+      ctx.fillStyle = '#1e1e22';
+      ctx.fill();
+      ctx.strokeStyle = '#2a2a2e';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    function renderChips() {
+      chipsEl.innerHTML = '';
+      names.forEach((name, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.style.background = COLORS[i % COLORS.length];
+        const txt = document.createTextNode(name);
+        const del = document.createElement('button');
+        del.textContent = '×';
+        del.title = 'Entfernen';
+        del.addEventListener('click', () => {
+          names.splice(i, 1);
+          saveNames(); renderChips(); drawWheel();
+        });
+        chip.append(dot, txt, del);
+        chipsEl.appendChild(chip);
+      });
+    }
+
+    function addName() {
+      const input = document.getElementById('nameInput');
+      const val = input.value.trim();
+      if (!val) return;
+      if (names.length >= 16) { alert('Maximal 16 Namen – so groß ist kein Betriebsrat 😄'); return; }
+      names.push(val);
+      input.value = '';
+      saveNames(); renderChips(); drawWheel();
+    }
+    document.getElementById('addName').addEventListener('click', addName);
+    document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') addName(); });
+
+    document.getElementById('spinBtn').addEventListener('click', () => {
+      if (spinning || names.length < 2) {
+        if (names.length < 2) resultEl.innerHTML = '<div class="task">Mindestens 2 Namen nötig!</div>';
+        return;
+      }
+      spinning = true;
+      resultEl.innerHTML = '<div class="task">Trommelwirbel… 🥁</div>';
+      const totalRotation = 6 * Math.PI + Math.random() * 2 * Math.PI;
+      const duration = 4200;
+      const startAngle = angle;
+      const startTime = performance.now();
+
+      function frame(now) {
+        const t = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 4); // ease-out
+        angle = startAngle + totalRotation * eased;
+        drawWheel();
+        if (t < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          spinning = false;
+          announceWinner();
+        }
+      }
+      requestAnimationFrame(frame);
+    });
+
+    function announceWinner() {
+      // Zeiger steht oben (−90°); Gewinner ist das Segment unter dem Zeiger
+      const slice = (2 * Math.PI) / names.length;
+      const pointerAngle = (-Math.PI / 2 - angle) % (2 * Math.PI);
+      const normalized = (pointerAngle + 2 * Math.PI * 4) % (2 * Math.PI);
+      const idx = Math.floor(normalized / slice) % names.length;
+      const task = document.getElementById('taskSelect').value;
+      resultEl.innerHTML =
+        '<div class="winner">🎉 ' + escapeHtml(names[idx]) + '</div>' +
+        '<div class="task">ist dran mit: ' + escapeHtml(task) + '</div>';
+      confetti();
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function confetti() {
+      for (let i = 0; i < 80; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.width = c.style.height = (6 + Math.random() * 8) + 'px';
+        c.style.background = COLORS[Math.floor(Math.random() * COLORS.length)];
+        c.style.animationDuration = (1.8 + Math.random() * 2) + 's';
+        c.style.animationDelay = (Math.random() * 0.6) + 's';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 4500);
+      }
+    }
+
+    renderChips();
+    drawWheel();
+
+    // ── Abstimmung ──
+    const votes = { ja: 0, nein: 0, ent: 0 };
+    const voteEls = {
+      ja: document.getElementById('voteJa'),
+      nein: document.getElementById('voteNein'),
+      ent: document.getElementById('voteEnt')
+    };
+
+    function bindVote(key, el) {
+      el.addEventListener('click', () => { votes[key]++; renderVotes(); });
+      el.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        if (votes[key] > 0) votes[key]--;
+        renderVotes();
+      });
+    }
+    Object.entries(voteEls).forEach(([k, el]) => bindVote(k, el));
+
+    function renderVotes() {
+      voteEls.ja.querySelector('.count').textContent = votes.ja;
+      voteEls.nein.querySelector('.count').textContent = votes.nein;
+      voteEls.ent.querySelector('.count').textContent = votes.ent;
+      const total = votes.ja + votes.nein + votes.ent;
+      const bar = document.getElementById('voteBar');
+      bar.querySelector('.b-ja').style.width = total ? (votes.ja / total * 100) + '%' : '0%';
+      bar.querySelector('.b-ent').style.width = total ? (votes.ent / total * 100) + '%' : '0%';
+      bar.querySelector('.b-nein').style.width = total ? (votes.nein / total * 100) + '%' : '0%';
+      const verdict = document.getElementById('voteVerdict');
+      if (total === 0) { verdict.textContent = ''; return; }
+      if (votes.ja > votes.nein) {
+        verdict.textContent = '✅ Angenommen (' + votes.ja + ' : ' + votes.nein + ' bei ' + votes.ent + ' Enthaltungen)';
+        verdict.style.color = 'var(--success)';
+      } else if (votes.nein > votes.ja) {
+        verdict.textContent = '❌ Abgelehnt (' + votes.ja + ' : ' + votes.nein + ' bei ' + votes.ent + ' Enthaltungen)';
+        verdict.style.color = 'var(--error)';
+      } else {
+        verdict.textContent = '⚖️ Patt – die Diskussion geht in die nächste Runde!';
+        verdict.style.color = 'var(--warning)';
+      }
+    }
+
+    document.getElementById('voteReset').addEventListener('click', () => {
+      votes.ja = votes.nein = votes.ent = 0;
+      document.getElementById('voteTopic').value = '';
+      renderVotes();
+    });
+
+    // ── Timer ──
+    let timerSeconds = 300;
+    let timerRemaining = 300;
+    let timerInterval = null;
+
+    const display = document.getElementById('timerDisplay');
+    const startBtn = document.getElementById('timerStart');
+
+    function renderTimer() {
+      const neg = timerRemaining < 0;
+      const abs = Math.abs(timerRemaining);
+      const m = String(Math.floor(abs / 60)).padStart(2, '0');
+      const s = String(abs % 60).padStart(2, '0');
+      display.textContent = (neg ? '−' : '') + m + ':' + s;
+      display.classList.toggle('warning', !neg && timerRemaining <= 30 && timerRemaining > 0);
+      display.classList.toggle('over', neg || timerRemaining === 0);
+    }
+
+    document.querySelectorAll('.timer-presets button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        timerSeconds = parseInt(btn.dataset.min, 10) * 60;
+        stopTimer();
+        timerRemaining = timerSeconds;
+        renderTimer();
+      });
+    });
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      startBtn.textContent = '▶ Start';
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (timerInterval) { stopTimer(); return; }
+      startBtn.textContent = '⏸ Pause';
+      timerInterval = setInterval(() => {
+        timerRemaining--;
+        renderTimer();
+        if (timerRemaining === 0) beep();
+      }, 1000);
+    });
+
+    document.getElementById('timerReset').addEventListener('click', () => {
+      stopTimer();
+      timerRemaining = timerSeconds;
+      renderTimer();
+    });
+
+    function beep() {
+      try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.25, 0.5].forEach(offset => {
+          const osc = ac.createOscillator();
+          const gain = ac.createGain();
+          osc.connect(gain); gain.connect(ac.destination);
+          osc.frequency.value = 880;
+          gain.gain.setValueAtTime(0.25, ac.currentTime + offset);
+          gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + offset + 0.2);
+          osc.start(ac.currentTime + offset);
+          osc.stop(ac.currentTime + offset + 0.2);
+        });
+      } catch (e) { /* Audio nicht verfügbar – Timer blinkt trotzdem */ }
+    }
+
+    renderTimer();
+  </script>
+</body>
+</html>
